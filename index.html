@@ -10,134 +10,155 @@
 
 <script>
 
-    var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+    var playState = {
 
-    function preload() {
+        preload: function() {
 
-        game.load.image('sky', 'assets/sky.png');
-        game.load.image('ground', 'assets/platform.png');
-        game.load.image('star', 'assets/star.png');
-        game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+            game.load.image('sky', 'assets/sky.png');
+            game.load.image('ground', 'assets/platform.png');
+            game.load.image('star', 'assets/star.png');
+            game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+
+        },
+
+        create: function() {
+
+            game.physics.startSystem(Phaser.Physics.ARCADE);
+
+            // Background sky
+            game.add.sprite(0, 0, 'sky');
+
+            this.platforms = game.add.group();
+            this.platforms.enableBody = true;
+
+            // Ground
+            this.ground = this.platforms.create(0, game.world.height - 64, 'ground');
+            this.ground.scale.setTo(2, 2);
+            this.ground.body.immovable = true;
+
+            // Platforms
+            this.ledge = this.platforms.create(400, 400, 'ground');
+            this.ledge.body.immovable = true;
+
+            this.ledge = this.platforms.create(-150, 250, 'ground');
+            this.ledge.body.immovable = true;
+
+            this.ledge = this.platforms.create(400, 100, 'ground');
+            this.ledge.body.immovable = true;
+
+            this.player = game.add.sprite(32, game.world.height - 600, 'dude');
+
+            this.player.animations.add('left', [0, 1, 2, 3], 20, true);
+            this.player.animations.add('right', [5, 6, 7, 8], 20, true);
+
+
+            this.stars = game.add.group();
+
+            //  We will enable physics for any star that is created in this group
+            this.stars.enableBody = true;
+
+            //  Here we'll create 12 of them evenly spaced apart
+            for (var i = 0; i < 30; i++)
+            {
+                //  Create a star inside of the 'stars' group
+                this.star = this.stars.create(i * 70, 0, 'star');
+
+                //  Let gravity do its thing
+                this.star.body.gravity.y = 300;
+
+                //  This just gives each star a slightly random bounce value
+                this.star.body.bounce.y = 0.7 + Math.random() * 0.2;
+            }
+
+            game.physics.arcade.enable(this.player);
+
+            this.player.body.bounce.y = 0.2;
+            this.player.body.gravity.y = 5000;
+            this.player.body.collideWorldBounds = true;
+
+            // score
+            this.score = 0;
+            this.scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+
+            // Controls
+            this.cursors = game.input.keyboard.createCursorKeys();
+        },
+
+        update: function() {
+
+            game.physics.arcade.collide(this.player, this.platforms);
+            game.physics.arcade.collide(this.stars, this.platforms);
+
+            game.physics.arcade.overlap(this.player, this.stars, this.collectStar, null, this);
+
+            this.player.body.velocity.x = 0;
+
+            this.inputs();
+        },
+
+        inputs: function() {
+
+            if (this.cursors.left.isDown)  { this.directionPlayer(-650, 'left'); } // Move to left
+            else if (this.cursors.right.isDown) { this.directionPlayer(650, 'right'); }  // Move to right
+            else if (this.cursors.up.isDown && this.player.body.touching.down) { this.jumpPlayer(-2000); }
+            else { this.stopPlayer(); } // Stop
+
+            // Jump
+            if (this.cursors.up.isDown && this.player.body.touching.down)
+            {
+                this.jumpPlayer(-2000);
+            }
+
+        },
+
+        // Example function!
+        jumpPlayer: function(velocity) {
+            this.player.body.velocity.y = velocity;
+        },
+        directionPlayer: function(velocity, animation) {
+
+            console.log("DIRECTION 1");
+            this.player.body.velocity.x = velocity;
+            this.player.animations.play(animation);
+        },
+        stopPlayer: function() {
+            this.player.animations.stop();
+            this.player.frame = 4;
+        },
+        collectStar: function(player, star) {
+            // Removes the star from the screen
+            star.kill();
+
+            //  Add and update the score
+            this.score += 10;
+            this.scoreText.text = 'Score: ' + this.score;
+        }
+    };
+
+    var game = new Phaser.Game(800, 600, Phaser.AUTO, 'game5');
+
+    game.state.add('play', playState);
+    game.state.start('play');
+
+/*
+    function shakeEffect (g) {
+        var move = 5;
+        var time = 20;
+
+        game.add.tween(g)
+                .to({y:"-"+move}, time).to({y:"+"+move*2}, time*2).to({y:"-"+move}, time)
+                .to({y:"-"+move}, time).to({y:"+"+move*2}, time*2).to({y:"-"+move}, time)
+                .to({y:"-"+move/2}, time).to({y:"+"+move}, time*2).to({y:"-"+move/2}, time)
+                .start();
+
+        game.add.tween(g)
+                .to({x:"-"+move}, time).to({x:"+"+move*2}, time*2).to({x:"-"+move}, time)
+                .to({x:"-"+move}, time).to({x:"+"+move*2}, time*2).to({x:"-"+move}, time)
+                .to({x:"-"+move/2}, time).to({x:"+"+move}, time*2).to({x:"-"+move/2}, time)
+                .start();
     }
 
-    var player;
-    var platforms;
-    var cursors;
-
-    var stars;
-    var score = 0;
-    var scoreText;
-
-    function create() {
-        //  We're going to be using physics, so enable the Arcade Physics system
-        game.physics.startSystem(Phaser.Physics.ARCADE);
-
-        // Background sky
-        game.add.sprite(0, 0, 'sky');
-
-        platforms = game.add.group();
-        platforms.enableBody = true;
-
-        // Ground
-        var ground = platforms.create(0, game.world.height - 64, 'ground');
-        ground.scale.setTo(2, 2);
-        ground.body.immovable = true;
-
-        // Platforms
-        var ledge = platforms.create(400, 400, 'ground');
-        ledge.body.immovable = true;
-
-        ledge = platforms.create(-150, 250, 'ground');
-        ledge.body.immovable = true;
-
-        ledge = platforms.create(400, 100, 'ground');
-        ledge.body.immovable = true;
-
-        player = game.add.sprite(32, game.world.height - 600, 'dude');
-
-        player.animations.add('left', [0, 1, 2, 3], 20, true);
-        player.animations.add('right', [5, 6, 7, 8], 20, true);
-
-
-
-        stars = game.add.group();
-
-        //  We will enable physics for any star that is created in this group
-        stars.enableBody = true;
-
-        //  Here we'll create 12 of them evenly spaced apart
-        for (var i = 0; i < 30; i++)
-        {
-            //  Create a star inside of the 'stars' group
-            var star = stars.create(i * 70, 0, 'star');
-
-            //  Let gravity do its thing
-            star.body.gravity.y = 300;
-
-            //  This just gives each star a slightly random bounce value
-            star.body.bounce.y = 0.7 + Math.random() * 0.2;
-        }
-
-
-
-        game.physics.arcade.enable(player);
-
-        player.body.bounce.y = 0.2;
-        player.body.gravity.y = 5000;
-        player.body.collideWorldBounds = true;
-
-        // score
-        scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
-
-        // Controls
-        cursors = game.input.keyboard.createCursorKeys();
-    }
-
-    function update() {
-
-        game.physics.arcade.collide(player, platforms);
-        game.physics.arcade.collide(stars, platforms);
-
-        game.physics.arcade.overlap(player, stars, collectStar, null, this);
-
-        player.body.velocity.x = 0;
-
-        if (cursors.left.isDown)
-        {
-            //  Move to the left
-            player.body.velocity.x = -650;
-            player.animations.play('left');
-        }
-        else if (cursors.right.isDown)
-        {
-            //  Move to the right
-            player.body.velocity.x = 650;
-            player.animations.play('right');
-        }
-        else
-        {
-            //  Stand still
-            player.animations.stop();
-
-            player.frame = 4;
-        }
-
-        if (cursors.up.isDown && player.body.touching.down)
-        {
-            player.body.velocity.y = -2000;
-        }
-    }
-
-    function collectStar (player, star) {
-
-        // Removes the star from the screen
-        star.kill();
-
-        //  Add and update the score
-        score += 10;
-        scoreText.text = 'Score: ' + score;
-
-    }
+*/
 
 </script>
 
