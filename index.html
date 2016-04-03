@@ -14,11 +14,14 @@
 
         preload: function() {
 
-            game.load.image('sky', 'assets/sky.png');
-            game.load.image('ground', 'assets/platform.png');
-            game.load.image('star', 'assets/star.png');
-            game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+            game.load.image('sky', 'assets/images/sky.png');
+            game.load.image('ground', 'assets/images/platform.png');
+            game.load.image('star', 'assets/images/star.png');
+            game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
 
+            game.load.audio('music', ['assets/sounds/music.wav']);
+            game.load.audio('jump', ['assets/sounds/jump.wav']);
+            game.load.audio('coin', ['assets/sounds/coin.wav']);
         },
 
         create: function() {
@@ -82,6 +85,14 @@
 
             // Controls
             this.cursors = game.input.keyboard.createCursorKeys();
+
+            // Sounds
+            this.coinSound = game.add.audio('coin', 1);
+            this.jumpSound = game.add.audio('jump', 1);
+
+            this.music = game.add.audio('music', 0.8);
+            this.music.loop = true;
+            this.music.play();
         },
 
         update: function() {
@@ -100,7 +111,6 @@
 
             if (this.cursors.left.isDown)  { this.directionPlayer(-650, 'left'); } // Move to left
             else if (this.cursors.right.isDown) { this.directionPlayer(650, 'right'); }  // Move to right
-            else if (this.cursors.up.isDown && this.player.body.touching.down) { this.jumpPlayer(-2000); }
             else { this.stopPlayer(); } // Stop
 
             // Jump
@@ -108,16 +118,15 @@
             {
                 this.jumpPlayer(-2000);
             }
-
         },
 
         // Example function!
         jumpPlayer: function(velocity) {
             this.player.body.velocity.y = velocity;
+            this.jumpSound.play();
         },
         directionPlayer: function(velocity, animation) {
 
-            console.log("DIRECTION 1");
             this.player.body.velocity.x = velocity;
             this.player.animations.play(animation);
         },
@@ -128,6 +137,7 @@
         collectStar: function(player, star) {
             // Removes the star from the screen
             star.kill();
+            this.coinSound.play();
 
             //  Add and update the score
             this.score += 10;
