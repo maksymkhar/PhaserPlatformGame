@@ -51,6 +51,18 @@
 
             // Controls
             this.cursors = game.input.keyboard.createCursorKeys();
+
+
+
+
+
+
+            this.jumping = false;
+
+
+
+
+
         },
 
         update: function() {
@@ -67,14 +79,25 @@
 
         inputs: function() {
 
+            // Directions
             if (this.cursors.left.isDown)  { this.directionPlayer(-300, 'left'); } // Move to left
             else if (this.cursors.right.isDown) { this.directionPlayer(300, 'right'); }  // Move to right
             else { this.stopPlayer(); } // Stop
 
-            // Jump
-            if (this.cursors.up.isDown)
-            {
+            // Double jump
+            if (this.player.body.onFloor()) {
+                this.jumps = 2;
+                this.jumping = false;
+            }
+
+            if (this.jumps > 0 && this.upInputIsActive(5)) {
                 this.jumpPlayer(-400);
+                this.jumping = true;
+            }
+
+            if (this.jumping && this.upInputIsReleased()) {
+                this.jumps--;
+                this.jumping = false;
             }
         },
 
@@ -165,6 +188,23 @@
             this.music = game.add.audio('music', 0.8);
             this.music.loop = true;
             this.music.play();
+        },
+        upInputIsActive: function(duration) {
+
+            isActive = this.input.keyboard.downDuration(Phaser.Keyboard.UP, duration);
+
+            isActive |= (game.input.activePointer.justPressed(duration + 1000/60) &&
+                game.input.activePointer.x > game.width/4 &&
+                game.input.activePointer.x < game.width/2 + game.width/4);
+
+            return isActive;
+        },
+        upInputIsReleased: function() {
+
+            isReleased = this.input.keyboard.upDuration(Phaser.Keyboard.UP);
+            isReleased |= game.input.activePointer.justReleased();
+
+            return isReleased;
         }
     };
 
