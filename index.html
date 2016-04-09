@@ -3,8 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Phaser</title>
+
+    <style>
+        body {  background: #000;  width:100%}h1{  color: #fff;  text-align: center;}/*center canvas*/canvas { margin: auto; }
+    </style>
+
 </head>
 <body>
+
+<h1>Phaser Platform Game</h1>
 
 <script src="node_modules/phaser/dist/phaser.min.js"></script>
 
@@ -22,62 +29,21 @@
             game.load.audio('music', ['assets/sounds/music.wav']);
             game.load.audio('jump', ['assets/sounds/jump.wav']);
             game.load.audio('coin', ['assets/sounds/coin.wav']);
+
+
+
+            game.load.tilemap('tile_map', 'assets/map/tile_map_level_1.json', null, Phaser.Tilemap.TILED_JSON);
+            game.load.image('tile_sheet', 'assets/map/tilesheet.png');
         },
 
         create: function() {
 
             game.physics.startSystem(Phaser.Physics.ARCADE);
 
-            // Background sky
-            game.add.sprite(0, 0, 'sky');
-
-            this.platforms = game.add.group();
-            this.platforms.enableBody = true;
-
-            // Ground
-            this.ground = this.platforms.create(0, game.world.height - 64, 'ground');
-            this.ground.scale.setTo(2, 2);
-            this.ground.body.immovable = true;
-
-            // Platforms
-            this.ledge = this.platforms.create(400, 400, 'ground');
-            this.ledge.body.immovable = true;
-
-            this.ledge = this.platforms.create(-150, 250, 'ground');
-            this.ledge.body.immovable = true;
-
-            this.ledge = this.platforms.create(400, 100, 'ground');
-            this.ledge.body.immovable = true;
-
-            this.player = game.add.sprite(32, game.world.height - 600, 'dude');
-
-            this.player.animations.add('left', [0, 1, 2, 3], 20, true);
-            this.player.animations.add('right', [5, 6, 7, 8], 20, true);
-
-
-            this.stars = game.add.group();
-
-            //  We will enable physics for any star that is created in this group
-            this.stars.enableBody = true;
-
-            //  Here we'll create 12 of them evenly spaced apart
-            for (var i = 0; i < 30; i++)
-            {
-                //  Create a star inside of the 'stars' group
-                this.star = this.stars.create(i * 70, 0, 'star');
-
-                //  Let gravity do its thing
-                this.star.body.gravity.y = 300;
-
-                //  This just gives each star a slightly random bounce value
-                this.star.body.bounce.y = 0.7 + Math.random() * 0.2;
-            }
-
-            game.physics.arcade.enable(this.player);
-
-            this.player.body.bounce.y = 0.2;
-            this.player.body.gravity.y = 5000;
-            this.player.body.collideWorldBounds = true;
+            this.loadMap();
+            this.loadPlayer();
+            this.loadStars();
+            this.loadSounds();
 
             // score
             this.score = 0;
@@ -85,20 +51,12 @@
 
             // Controls
             this.cursors = game.input.keyboard.createCursorKeys();
-
-            // Sounds
-            this.coinSound = game.add.audio('coin', 1);
-            this.jumpSound = game.add.audio('jump', 1);
-
-            this.music = game.add.audio('music', 0.8);
-            this.music.loop = true;
-            this.music.play();
         },
 
         update: function() {
 
-            game.physics.arcade.collide(this.player, this.platforms);
-            game.physics.arcade.collide(this.stars, this.platforms);
+            game.physics.arcade.collide(this.stars, this.platformsLayer);
+            game.physics.arcade.collide(this.player, this.platformsLayer);
 
             game.physics.arcade.overlap(this.player, this.stars, this.collectStar, null, this);
 
@@ -109,14 +67,14 @@
 
         inputs: function() {
 
-            if (this.cursors.left.isDown)  { this.directionPlayer(-650, 'left'); } // Move to left
-            else if (this.cursors.right.isDown) { this.directionPlayer(650, 'right'); }  // Move to right
+            if (this.cursors.left.isDown)  { this.directionPlayer(-300, 'left'); } // Move to left
+            else if (this.cursors.right.isDown) { this.directionPlayer(300, 'right'); }  // Move to right
             else { this.stopPlayer(); } // Stop
 
             // Jump
-            if (this.cursors.up.isDown && this.player.body.touching.down)
+            if (this.cursors.up.isDown)
             {
-                this.jumpPlayer(-2000);
+                this.jumpPlayer(-400);
             }
         },
 
@@ -142,10 +100,75 @@
             //  Add and update the score
             this.score += 10;
             this.scoreText.text = 'Score: ' + this.score;
+        },
+        loadMap: function() {
+
+            game.stage.backgroundColor = "#4488AA";
+
+            this.map = game.add.tilemap('tile_map');
+            //this.map.addTilesetImage('night', 'tile_background');
+            this.map.addTilesetImage('tile_map', 'tile_sheet');
+
+            decorationLayer = this.map.createLayer('decoration');
+            waterLayer = this.map.createLayer('water');
+            this.platformsLayer = this.map.createLayer('ground');
+
+            waterLayer.resizeWorld();
+
+            this.map.setCollisionBetween(1, 10000, true, 'ground');
+        },
+        loadPlayer: function() {
+
+            this.player = game.add.sprite(20, game.world.height - 200, 'dude');
+            this.player.scale.setTo(1.1, 1.1);
+
+            game.physics.arcade.enable(this.player);
+            game.camera.follow(this.player);
+
+            this.player.body.collideWorldBounds = true;
+
+
+            this.player.animations.add('left', [0, 1, 2, 3], 20, true);
+            this.player.animations.add('right', [5, 6, 7, 8], 20, true);
+
+
+            this.player.body.bounce.y = 0.2;
+            this.player.body.gravity.y = 1200;
+        },
+        loadStars: function () {
+
+            this.stars = game.add.group();
+
+            //  We will enable physics for any star that is created in this group
+            this.stars.enableBody = true;
+
+            //  Here we'll create 12 of them evenly spaced apart
+            for (var i = 0; i < 30; i++)
+            {
+                //  Create a star inside of the 'stars' group
+                this.star = this.stars.create(i * 70, 0, 'star');
+
+                //  Let gravity do its thing
+                this.star.body.gravity.y = 300;
+
+                //  This just gives each star a slightly random bounce value
+                this.star.body.bounce.y = 0.7 + Math.random() * 0.2;
+            }
+
+        },
+        loadSounds: function () {
+
+            // Sounds
+            this.coinSound = game.add.audio('coin', 1);
+            this.jumpSound = game.add.audio('jump', 1);
+            // Music
+            this.music = game.add.audio('music', 0.8);
+            this.music.loop = true;
+            this.music.play();
         }
     };
 
-    var game = new Phaser.Game(800, 600, Phaser.AUTO, 'game5');
+    var game = new Phaser.Game(1000, 600, Phaser.AUTO, 'game5');
 
     game.state.add('play', playState);
     game.state.start('play');
