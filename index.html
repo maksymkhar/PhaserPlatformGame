@@ -5,13 +5,10 @@
     <title>Phaser</title>
 
     <style>
-        body {  background: #000;  width:100%}h1{  color: #fff;  text-align: center;}/*center canvas*/canvas { margin: auto; }
     </style>
 
 </head>
 <body>
-
-<h1>Phaser Platform Game</h1>
 
 <script src="node_modules/phaser/dist/phaser.min.js"></script>
 
@@ -29,6 +26,8 @@
             game.load.audio('music', ['assets/sounds/music.wav']);
             game.load.audio('jump', ['assets/sounds/jump.wav']);
             game.load.audio('coin', ['assets/sounds/coin.wav']);
+            game.load.audio('game_over', ['assets/sounds/game_over.wav']);
+            game.load.audio('splash', ['assets/sounds/splash.wav']);
 
 
 
@@ -47,7 +46,10 @@
 
             // score
             this.score = 0;
-            this.scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+            this.scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#fff' });
+
+
+
 
             // Controls
             this.cursors = game.input.keyboard.createCursorKeys();
@@ -73,6 +75,12 @@
             game.physics.arcade.overlap(this.player, this.stars, this.collectStar, null, this);
 
             this.player.body.velocity.x = 0;
+
+            //if (this.player.y > 1180) { this.player.kill(); game.state.restart(); this.music.stop(); this.gameOver.play(); }
+            if (this.player.y > 1180) {
+                this.playerDeath();
+            }
+
 
             this.inputs();
         },
@@ -129,14 +137,13 @@
             game.stage.backgroundColor = "#4488AA";
 
             this.map = game.add.tilemap('tile_map');
-            //this.map.addTilesetImage('night', 'tile_background');
             this.map.addTilesetImage('tile_map', 'tile_sheet');
 
             decorationLayer = this.map.createLayer('decoration');
-            waterLayer = this.map.createLayer('water');
+            this.waterLayer = this.map.createLayer('water');
             this.platformsLayer = this.map.createLayer('ground');
 
-            waterLayer.resizeWorld();
+            this.waterLayer.resizeWorld();
 
             this.map.setCollisionBetween(1, 10000, true, 'ground');
         },
@@ -184,6 +191,8 @@
             // Sounds
             this.coinSound = game.add.audio('coin', 1);
             this.jumpSound = game.add.audio('jump', 1);
+            this.gameOver = game.add.audio('game_over', 1);
+            this.splash = game.add.audio('splash', 1);
             // Music
             this.music = game.add.audio('music', 0.8);
             this.music.loop = true;
@@ -205,6 +214,11 @@
             isReleased |= game.input.activePointer.justReleased();
 
             return isReleased;
+        },
+        playerDeath: function () {
+            game.state.restart();
+            this.music.stop();
+            this.splash.play();
         }
     };
 
