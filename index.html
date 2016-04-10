@@ -28,6 +28,9 @@
             game.load.image('ground', 'assets/images/platform.png');
             game.load.image('star', 'assets/images/star.png');
             game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
+            game.load.image('enemy_1', 'assets/images/enemySpikey_1.png');
+            game.load.image('enemy_2', 'assets/images/enemySpikey_2.png');
+            game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
             game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
 
             game.load.audio('music', ['assets/sounds/music.wav']);
@@ -50,6 +53,7 @@
             this.loadSounds();
             this.createModals();
             this.setParticles();
+            this.loadEnemies();
 
             // score
             this.score = 0;
@@ -59,26 +63,28 @@
             // Controls
             this.cursors = game.input.keyboard.createCursorKeys();
         },
-
         update: function() {
 
             game.physics.arcade.collide(this.stars, this.platformsLayer);
             game.physics.arcade.collide(this.player, this.platformsLayer);
+            game.physics.arcade.collide(this.enemies, this.platformsLayer);
 
             game.physics.arcade.overlap(this.player, this.stars, this.collectStar, null, this);
+            game.physics.arcade.overlap(this.player, this.enemies, this.enemyAttack, null, this);
 
             this.player.body.velocity.x = 0;
 
-            //if (this.player.y > 1180) { this.player.kill(); game.state.restart(); this.music.stop(); this.gameOver.play(); }
             if (this.player.y > 1180 && this.player.alive) {
                 this.playerSplash();
             }
 
-
             this.inputs();
+            this.updateEnemyMovement();
         },
 
         inputs: function() {
+
+            if (this.player.dead) { return; }
 
             // Directions
             if (this.cursors.left.isDown)  { this.directionPlayer(-300, 'left'); } // Move to left
@@ -106,9 +112,6 @@
         jumpPlayer: function(velocity) {
             this.player.body.velocity.y = velocity;
             this.jumpSound.play();
-
-
-
         },
         directionPlayer: function(velocity, animation) {
 
@@ -120,13 +123,24 @@
             this.player.frame = 4;
         },
         collectStar: function(player, star) {
-            // Removes the star from the screen
-            star.kill();
+
+            star.body.enable = false;
+            game.add.tween(star.scale).to({x:0}, 150).start();
+            game.add.tween(star).to({y:-1000}, 150).start();
+
             this.coinSound.play();
 
             //  Add and update the score
             this.score += 10;
             this.scoreText.text = 'Score: ' + this.score;
+        },
+        enemyAttack: function() {
+
+            if (this.player.dead) { return; }
+
+            this.shakeEffect(this.player);
+            this.playerDeath();
+            this.player.dead = true;
         },
         loadMap: function() {
 
@@ -151,15 +165,16 @@
             game.physics.arcade.enable(this.player);
             game.camera.follow(this.player);
 
-            this.player.body.collideWorldBounds = true;
 
+            this.player.body.collideWorldBounds = true;
 
             this.player.animations.add('left', [0, 1, 2, 3], 20, true);
             this.player.animations.add('right', [5, 6, 7, 8], 20, true);
 
-
             this.player.body.bounce.y = 0.2;
             this.player.body.gravity.y = 1200;
+
+            this.player.dead = false;
         },
         loadStars: function () {
 
@@ -212,7 +227,6 @@
             return isReleased;
         },
         playerDeath: function () {
-            this.player.kill();
             this.modal.showModal("game_over_modal");
             this.music.stop();
             this.gameOver.play();
@@ -227,12 +241,43 @@
             this.splashParticles.gravity = 0;
         },
         playerSplash: function() {
-
+            this.player.kill();
             this.splashParticles.x = this.player.x + 10;
             this.splashParticles.y = this.player.y + 30;
             this.splashParticles.start(true, 600, null, 80);
             this.splash.play();
             this.playerDeath();
+        },
+        loadEnemies: function() {
+
+            this.enemies = game.add.group();
+            this.enemies.enableBody = true;
+
+            this.enemy1 = this.enemies.create(400, game.world.height - 220, 'enemy_1');
+            this.enemy1.body.gravity.y = 300;
+            this.enemy1.body.velocity.x = 40;
+
+            this.enemy2 = this.enemies.create(400, game.world.height - 420, 'enemy_2');
+            this.enemy2.body.gravity.y = 300;
+            this.enemy2.body.velocity.x = -60;
+
+            this.enemy3 = this.enemies.create(810, game.world.height - 580, 'enemy_2');
+            this.enemy3.body.gravity.y = 300;
+            this.enemy3.body.velocity.x = 60;
+        },
+        updateEnemyMovement: function(){
+
+            console.log(parseInt(this.enemy1.body.x));
+            console.log(this.enemy1.body.velocity.x + " - " + this.direction);
+
+            if (parseInt(this.enemy1.body.x) == 430 ) { this.enemy1.body.velocity.x = -40; }
+            if (parseInt(this.enemy1.body.x) == 360 ) { this.enemy1.body.velocity.x = 40; }
+
+            if (parseInt(this.enemy2.body.x) == 430 ) { this.enemy2.body.velocity.x = -60; }
+            if (parseInt(this.enemy2.body.x) == 360 ) { this.enemy2.body.velocity.x = 60; }
+
+            if (parseInt(this.enemy3.body.x) == 1200 ) { this.enemy3.body.velocity.x = -600; }
+            if (parseInt(this.enemy3.body.x) == 810 ) { this.enemy3.body.velocity.x = 60; }
         },
         createModals: function() {
 
@@ -283,6 +328,22 @@
                     }
                 ]
             });
+        },
+        shakeEffect: function(g) {
+            var move = 5;
+            var time = 20;
+
+            game.add.tween(g)
+                    .to({y:"-"+move}, time).to({y:"+"+move*2}, time*2).to({y:"-"+move}, time)
+                    .to({y:"-"+move}, time).to({y:"+"+move*2}, time*2).to({y:"-"+move}, time)
+                    .to({y:"-"+move/2}, time).to({y:"+"+move}, time*2).to({y:"-"+move/2}, time)
+                    .start();
+
+            game.add.tween(g)
+                    .to({x:"-"+move}, time).to({x:"+"+move*2}, time*2).to({x:"-"+move}, time)
+                    .to({x:"-"+move}, time).to({x:"+"+move*2}, time*2).to({x:"-"+move}, time)
+                    .to({x:"-"+move/2}, time).to({x:"+"+move}, time*2).to({x:"-"+move/2}, time)
+                    .start();
         }
     };
 
