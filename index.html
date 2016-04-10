@@ -30,6 +30,8 @@
             game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
             game.load.image('enemy_1', 'assets/images/enemySpikey_1.png');
             game.load.image('enemy_2', 'assets/images/enemySpikey_2.png');
+            game.load.image('enemy_3', 'assets/images/enemySpikey_3.png');
+            game.load.image('enemy_4', 'assets/images/enemyFlying_1.png');
             game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
             game.load.image('blod_particle', 'assets/images/blod_particle.png');
             game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
@@ -300,18 +302,38 @@
             this.enemy3 = this.enemies.create(810, game.world.height - 580, 'enemy_2');
             this.enemy3.body.gravity.y = 300;
             this.enemy3.body.velocity.x = 60;
+
+            this.enemy4 = this.enemies.create(1420, game.world.height - 320, 'enemy_1');
+            this.enemy4.body.gravity.y = 300;
+            this.enemy4.body.velocity.x = 100;
+
+            this.enemy5 = this.enemies.create(2350, game.world.height - 540, 'enemy_3');
+            this.enemy5.body.gravity.y = 300;
+            this.enemy5.body.velocity.x = 100;
+
+            this.enemy6 = this.enemies.create(2950, game.world.height - 540, 'enemy_4');
+            this.enemy6.body.velocity.y = 100;
         },
 
         updateEnemyMovement: function(){
 
-            if (parseInt(this.enemy1.body.x) == 430 ) { this.enemy1.body.velocity.x = -40; }
-            if (parseInt(this.enemy1.body.x) == 360 ) { this.enemy1.body.velocity.x = 40; }
+            if (parseInt(this.enemy1.body.x) > 430 ) { this.enemy1.body.velocity.x = -40; }
+            if (parseInt(this.enemy1.body.x) < 360 ) { this.enemy1.body.velocity.x = 40; }
 
-            if (parseInt(this.enemy2.body.x) == 430 ) { this.enemy2.body.velocity.x = -60; }
-            if (parseInt(this.enemy2.body.x) == 360 ) { this.enemy2.body.velocity.x = 60; }
+            if (parseInt(this.enemy2.body.x) > 430 ) { this.enemy2.body.velocity.x = -60; }
+            if (parseInt(this.enemy2.body.x) < 360 ) { this.enemy2.body.velocity.x = 60; }
 
-            if (parseInt(this.enemy3.body.x) == 1200 ) { this.enemy3.body.velocity.x = -600; }
-            if (parseInt(this.enemy3.body.x) == 810 ) { this.enemy3.body.velocity.x = 60; }
+            if (parseInt(this.enemy3.body.x) > 1200 ) { this.enemy3.body.velocity.x = -600; }
+            if (parseInt(this.enemy3.body.x) < 810 ) { this.enemy3.body.velocity.x = 60; }
+
+            if (parseInt(this.enemy4.body.x) > 1970) { this.enemy4.body.velocity.x = this.getRandomBetween(-50, -800); }
+            if (parseInt(this.enemy4.body.x) < 1420 ) { this.enemy4.body.velocity.x = this.getRandomBetween(50, 800); }
+
+            if (parseInt(this.enemy5.body.x) > 2830) { this.enemy5.body.velocity.x = this.getRandomBetween(-100, -400); }
+            if (parseInt(this.enemy5.body.x) < 2350 ) { this.enemy5.body.velocity.x = this.getRandomBetween(100, 400); }
+
+            if (parseInt(this.enemy6.body.y) > 900 ) { this.enemy6.body.velocity.y = -150; }
+            if (parseInt(this.enemy6.body.y) < 650 ) { this.enemy6.body.velocity.y = 150; }
         },
 
         initCounters: function() {
@@ -390,33 +412,16 @@
                     .to({x:"-"+move}, time).to({x:"+"+move*2}, time*2).to({x:"-"+move}, time)
                     .to({x:"-"+move/2}, time).to({x:"+"+move}, time*2).to({x:"-"+move/2}, time)
                     .start();
+        },
+        getRandomBetween: function (start, end) {
+            return Math.floor(Math.random() * end) + start;
         }
     };
 
-    var game = new Phaser.Game(1000, 600, Phaser.AUTO, 'game5');
+    var game = new Phaser.Game(1200, 600, Phaser.AUTO, 'game5');
 
     game.state.add('play', playState);
     game.state.start('play');
-
-/*
-    function shakeEffect (g) {
-        var move = 5;
-        var time = 20;
-
-        game.add.tween(g)
-                .to({y:"-"+move}, time).to({y:"+"+move*2}, time*2).to({y:"-"+move}, time)
-                .to({y:"-"+move}, time).to({y:"+"+move*2}, time*2).to({y:"-"+move}, time)
-                .to({y:"-"+move/2}, time).to({y:"+"+move}, time*2).to({y:"-"+move/2}, time)
-                .start();
-
-        game.add.tween(g)
-                .to({x:"-"+move}, time).to({x:"+"+move*2}, time*2).to({x:"-"+move}, time)
-                .to({x:"-"+move}, time).to({x:"+"+move*2}, time*2).to({x:"-"+move}, time)
-                .to({x:"-"+move/2}, time).to({x:"+"+move}, time*2).to({x:"-"+move/2}, time)
-                .start();
-    }
-
-*/
 
 </script>
 
