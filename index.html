@@ -5,12 +5,18 @@
     <title>Phaser</title>
 
     <style>
+        body {  background: #000;  width:100%}h1{  color: #fff;  text-align: center;}/*center canvas*/canvas { margin: auto; }
     </style>
 
 </head>
 <body>
 
+<h1>Phaser Platform Game</h1>
+
 <script src="node_modules/phaser/dist/phaser.min.js"></script>
+
+<!-- Modals creator: https://github.com/netgfx/phaser_modals -->
+<script src="src/js/modal.js"></script>
 
 <script>
 
@@ -21,15 +27,14 @@
             game.load.image('sky', 'assets/images/sky.png');
             game.load.image('ground', 'assets/images/platform.png');
             game.load.image('star', 'assets/images/star.png');
+            game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
             game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
 
             game.load.audio('music', ['assets/sounds/music.wav']);
             game.load.audio('jump', ['assets/sounds/jump.wav']);
             game.load.audio('coin', ['assets/sounds/coin.wav']);
-            game.load.audio('game_over', ['assets/sounds/game_over.wav']);
+            game.load.audio('game_over', ['assets/sounds/game_over_a.wav']);
             game.load.audio('splash', ['assets/sounds/splash.wav']);
-
-
 
             game.load.tilemap('tile_map', 'assets/map/tile_map_level_1.json', null, Phaser.Tilemap.TILED_JSON);
             game.load.image('tile_sheet', 'assets/map/tilesheet.png');
@@ -43,28 +48,16 @@
             this.loadPlayer();
             this.loadStars();
             this.loadSounds();
+            this.createModals();
+            this.setParticles();
 
             // score
             this.score = 0;
             this.scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#fff' });
-
-
-
+            this.scoreText.fixedToCamera = true;
 
             // Controls
             this.cursors = game.input.keyboard.createCursorKeys();
-
-
-
-
-
-
-            this.jumping = false;
-
-
-
-
-
         },
 
         update: function() {
@@ -77,8 +70,8 @@
             this.player.body.velocity.x = 0;
 
             //if (this.player.y > 1180) { this.player.kill(); game.state.restart(); this.music.stop(); this.gameOver.play(); }
-            if (this.player.y > 1180) {
-                this.playerDeath();
+            if (this.player.y > 1180 && this.player.alive) {
+                this.playerSplash();
             }
 
 
@@ -99,7 +92,7 @@
             }
 
             if (this.jumps > 0 && this.upInputIsActive(5)) {
-                this.jumpPlayer(-400);
+                this.jumpPlayer(-420);
                 this.jumping = true;
             }
 
@@ -113,6 +106,9 @@
         jumpPlayer: function(velocity) {
             this.player.body.velocity.y = velocity;
             this.jumpSound.play();
+
+
+
         },
         directionPlayer: function(velocity, animation) {
 
@@ -191,7 +187,7 @@
             // Sounds
             this.coinSound = game.add.audio('coin', 1);
             this.jumpSound = game.add.audio('jump', 1);
-            this.gameOver = game.add.audio('game_over', 1);
+            this.gameOver = game.add.audio('game_over', 0.6);
             this.splash = game.add.audio('splash', 1);
             // Music
             this.music = game.add.audio('music', 0.8);
@@ -216,9 +212,77 @@
             return isReleased;
         },
         playerDeath: function () {
-            game.state.restart();
+            this.player.kill();
+            this.modal.showModal("game_over_modal");
             this.music.stop();
+            this.gameOver.play();
+        },
+        setParticles: function() {
+            this.splashParticles = game.add.emitter(0, 0, 200);
+            //this.splashParticles.scale(5);
+            //this.splashParticles.setSize(10, 10)
+            this.splashParticles.makeParticles('splash_particle');
+            this.splashParticles.setYSpeed(-300, 30);
+            this.splashParticles.setXSpeed(-80, 80);
+            this.splashParticles.gravity = 0;
+        },
+        playerSplash: function() {
+
+            this.splashParticles.x = this.player.x + 10;
+            this.splashParticles.y = this.player.y + 30;
+            this.splashParticles.start(true, 600, null, 80);
             this.splash.play();
+            this.playerDeath();
+        },
+        createModals: function() {
+
+            this.modal = new gameModal(game);
+
+            this.modal.createModal({
+                type:"game_over_modal",
+                includeBackground: true,
+                modalCloseOnInput: false,
+                fixedToCamera: true,
+                itemsArr: [
+                    {
+                        type: "text",
+                        content: "GAME OVER",
+                        fontFamily: "Luckiest Guy",
+                        fontSize: 50,
+                        color: "0xFEFF49",
+                        offsetY: -50
+                    },
+                    {
+                        type: "text",
+                        content: "Try again?",
+                        fontSize: 30,
+                        color: "fff",
+                        offsetY: 50
+                    },
+                    {
+                        type: "text",
+                        content: "YES",
+                        fontSize: 30,
+                        color: "fff",
+                        offsetY: 100,
+                        offsetX: -80,
+                        callback: function () {
+                            game.state.restart();
+                        }
+                    },
+                    {
+                        type: "text",
+                        content: "NO",
+                        fontSize: 30,
+                        color: "fff",
+                        offsetY: 100,
+                        offsetX: 80,
+                        callback: function () {
+                            // TODO: go to main menu
+                        }
+                    }
+                ]
+            });
         }
     };
 
