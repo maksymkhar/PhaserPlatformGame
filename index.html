@@ -31,6 +31,7 @@
             game.load.image('enemy_1', 'assets/images/enemySpikey_1.png');
             game.load.image('enemy_2', 'assets/images/enemySpikey_2.png');
             game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
+            game.load.image('blod_particle', 'assets/images/blod_particle.png');
             game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
 
             game.load.audio('music', ['assets/sounds/music.wav']);
@@ -38,6 +39,7 @@
             game.load.audio('coin', ['assets/sounds/coin.wav']);
             game.load.audio('game_over', ['assets/sounds/game_over_a.wav']);
             game.load.audio('splash', ['assets/sounds/splash.wav']);
+            game.load.audio('hurt', ['assets/sounds/hurt.wav']);
 
             game.load.tilemap('tile_map', 'assets/map/tile_map_level_1.json', null, Phaser.Tilemap.TILED_JSON);
             game.load.image('tile_sheet', 'assets/map/tilesheet.png');
@@ -81,7 +83,7 @@
             this.player.body.velocity.x = 0;
 
             if (this.player.y > 1180 && this.player.alive) {
-                this.playerSplash();
+                this.playerSplashDeath();
             }
 
             this.inputs();
@@ -145,6 +147,7 @@
             if (this.player.dead) { return; }
 
             this.shakeEffect(this.player);
+            this.hurt.play();
 
             if (this.lives > 0) {
                 this.lives--;
@@ -154,9 +157,8 @@
 
                 return;
             }
-            
-            this.playerDeath();
-            this.player.dead = true;
+
+            this.playerBloodDeath();
         },
         loadMap: function() {
 
@@ -219,6 +221,7 @@
             this.jumpSound = game.add.audio('jump', 1);
             this.gameOver = game.add.audio('game_over', 0.6);
             this.splash = game.add.audio('splash', 1);
+            this.hurt = game.add.audio('hurt', 1);
             // Music
             this.music = game.add.audio('music', 0.8);
             this.music.loop = true;
@@ -247,21 +250,39 @@
             this.gameOver.play();
         },
         setParticles: function() {
+
             this.splashParticles = game.add.emitter(0, 0, 200);
-            //this.splashParticles.scale(5);
-            //this.splashParticles.setSize(10, 10)
             this.splashParticles.makeParticles('splash_particle');
             this.splashParticles.setYSpeed(-300, 30);
             this.splashParticles.setXSpeed(-80, 80);
             this.splashParticles.gravity = 0;
+
+            this.blodParticles = game.add.emitter(0, 0, 200);
+            this.blodParticles.makeParticles('blod_particle');
+            this.blodParticles.setYSpeed(-300, 300);
+            this.blodParticles.setXSpeed(-300, 300);
+            this.blodParticles.gravity = 0;
         },
-        playerSplash: function() {
+        playerSplashDeath: function() {
+
             this.player.kill();
             this.splashParticles.x = this.player.x + 10;
             this.splashParticles.y = this.player.y + 30;
             this.splashParticles.start(true, 600, null, 80);
             this.splash.play();
+
             this.playerDeath();
+            this.player.dead = true;
+        },
+        playerBloodDeath: function() {
+
+            this.player.kill();
+            this.blodParticles.x = this.player.x + 10;
+            this.blodParticles.y = this.player.y + 30;
+            this.blodParticles.start(true, 600, null, 400);
+
+            this.playerDeath();
+            this.player.dead = true;
         },
         loadEnemies: function() {
 
