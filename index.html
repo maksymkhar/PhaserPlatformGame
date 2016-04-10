@@ -54,14 +54,16 @@
             this.createModals();
             this.setParticles();
             this.loadEnemies();
-
-            // score
-            this.score = 0;
-            this.scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#fff' });
-            this.scoreText.fixedToCamera = true;
+            // Load score and lives texts and counters
+            this.initCounters();
 
             // Controls
             this.cursors = game.input.keyboard.createCursorKeys();
+
+
+
+
+            this.immunityTime = 0;
         },
         update: function() {
 
@@ -70,7 +72,11 @@
             game.physics.arcade.collide(this.enemies, this.platformsLayer);
 
             game.physics.arcade.overlap(this.player, this.stars, this.collectStar, null, this);
-            game.physics.arcade.overlap(this.player, this.enemies, this.enemyAttack, null, this);
+
+            if (this.immunityTime < (new Date()).getTime()) {
+                this.player.tint = 0xffffff;
+                game.physics.arcade.overlap(this.player, this.enemies, this.enemyAttack, null, this);
+            }
 
             this.player.body.velocity.x = 0;
 
@@ -89,7 +95,7 @@
             // Directions
             if (this.cursors.left.isDown)  { this.directionPlayer(-300, 'left'); } // Move to left
             else if (this.cursors.right.isDown) { this.directionPlayer(300, 'right'); }  // Move to right
-            else { this.stopPlayer(); } // Stop
+            else { this.stopPlayer();} // Stop
 
             // Double jump
             if (this.player.body.onFloor()) {
@@ -139,6 +145,16 @@
             if (this.player.dead) { return; }
 
             this.shakeEffect(this.player);
+
+            if (this.lives > 0) {
+                this.lives--;
+                this.livesText.text = 'Lives: ' + this.lives;
+                this.immunityTime = (new Date()).getTime() + 3000;
+                this.player.tint = 0x6efdfd;
+
+                return;
+            }
+            
             this.playerDeath();
             this.player.dead = true;
         },
@@ -164,7 +180,6 @@
 
             game.physics.arcade.enable(this.player);
             game.camera.follow(this.player);
-
 
             this.player.body.collideWorldBounds = true;
 
@@ -265,10 +280,8 @@
             this.enemy3.body.gravity.y = 300;
             this.enemy3.body.velocity.x = 60;
         },
-        updateEnemyMovement: function(){
 
-            console.log(parseInt(this.enemy1.body.x));
-            console.log(this.enemy1.body.velocity.x + " - " + this.direction);
+        updateEnemyMovement: function(){
 
             if (parseInt(this.enemy1.body.x) == 430 ) { this.enemy1.body.velocity.x = -40; }
             if (parseInt(this.enemy1.body.x) == 360 ) { this.enemy1.body.velocity.x = 40; }
@@ -279,6 +292,18 @@
             if (parseInt(this.enemy3.body.x) == 1200 ) { this.enemy3.body.velocity.x = -600; }
             if (parseInt(this.enemy3.body.x) == 810 ) { this.enemy3.body.velocity.x = 60; }
         },
+
+        initCounters: function() {
+
+            this.score = 0;
+            this.scoreText = game.add.text(16, 16, 'Score: ' + this.score, { fontSize: '32px', fill: '#fff' });
+            this.scoreText.fixedToCamera = true;
+
+            this.lives = 3;
+            this.livesText = game.add.text(16, 55, 'Lives: ' + this.lives, { fontSize: '32px', fill: '#fff'});
+            this.livesText.fixedToCamera = true;
+        },
+
         createModals: function() {
 
             this.modal = new gameModal(game);
