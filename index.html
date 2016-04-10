@@ -332,8 +332,8 @@
             if (parseInt(this.enemy5.body.x) > 2830) { this.enemy5.body.velocity.x = this.getRandomBetween(-100, -400); }
             if (parseInt(this.enemy5.body.x) < 2350 ) { this.enemy5.body.velocity.x = this.getRandomBetween(100, 400); }
 
-            if (parseInt(this.enemy6.body.y) > 900 ) { this.enemy6.body.velocity.y = -150; }
-            if (parseInt(this.enemy6.body.y) < 650 ) { this.enemy6.body.velocity.y = 150; }
+            if (parseInt(this.enemy6.body.y) > 900 ) { this.enemy6.body.velocity.y = -600; }
+            if (parseInt(this.enemy6.body.y) < 600 ) { this.enemy6.body.velocity.y = 150; }
         },
 
         initCounters: function() {
@@ -418,7 +418,7 @@
         }
     };
 
-    var game = new Phaser.Game(1200, 600, Phaser.AUTO, 'game5');
+    var game = new Phaser.Game(1200, 800, Phaser.AUTO, 'game5');
 
     game.state.add('play', playState);
     game.state.start('play');
