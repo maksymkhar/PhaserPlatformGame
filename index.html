@@ -190,7 +190,7 @@
             this.player.animations.add('left', [0, 1, 2, 3], 20, true);
             this.player.animations.add('right', [5, 6, 7, 8], 20, true);
 
-            this.player.body.bounce.y = 0.2;
+            this.player.body.bounce.y = 0;
             this.player.body.gravity.y = 1200;
 
             this.player.dead = false;
@@ -418,7 +418,7 @@
         }
     };
 
-    var game = new Phaser.Game(1200, 800, Phaser.AUTO, 'game5');
+    var game = new Phaser.Game(1000, 600, Phaser.AUTO, 'game5');
 
     game.state.add('play', playState);
     game.state.start('play');
