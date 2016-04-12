@@ -385,7 +385,7 @@ var playState = {
                     offsetY: 100,
                     offsetX: 80,
                     callback: function () {
-                        // TODO: go to main menu
+                        game.state.start('menu');
                     }
                 }
             ]
