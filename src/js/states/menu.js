@@ -29,7 +29,7 @@ var menu = {
         this.startText.anchor.set(0.5);
         this.startText.inputEnabled = true;
         this.startText.events.onInputUp.add(function () {
-            game.state.start('playState');
+            game.state.start('playStateLevel1');
         });
     }
 };

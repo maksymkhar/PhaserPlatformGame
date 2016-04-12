@@ -1,4 +1,4 @@
-var playState = {
+var playStateLevel2 = {
 
     preload: function() {
 
@@ -22,7 +22,7 @@ var playState = {
         game.load.audio('splash', ['assets/sounds/splash.wav']);
         game.load.audio('hurt', ['assets/sounds/hurt.wav']);
 
-        game.load.tilemap('tile_map', 'assets/map/tile_map_level_1.json', null, Phaser.Tilemap.TILED_JSON);
+        game.load.tilemap('tile_map', 'assets/map/tile_map_level_2.json', null, Phaser.Tilemap.TILED_JSON);
         game.load.image('tile_sheet', 'assets/map/tilesheet.png');
     },
 
@@ -36,14 +36,15 @@ var playState = {
         this.loadSounds();
         this.createModals();
         this.setParticles();
-        this.loadEnemies();
+        //this.loadEnemies();
         this.initScoreCounter();
         this.initLives();
 
         // Controls
         this.cursors = game.input.keyboard.createCursorKeys();
-        
+
         this.immunityTime = 0;
+        this.levelPassed = false;
     },
     update: function() {
 
@@ -65,7 +66,8 @@ var playState = {
         }
 
         this.inputs();
-        this.updateEnemyMovement();
+        //this.updateEnemyMovement();
+        this.checkLevelPassed();
     },
 
     inputs: function() {
@@ -137,7 +139,7 @@ var playState = {
     },
     loadMap: function() {
 
-        game.stage.backgroundColor = "#4488AA";
+        game.stage.backgroundColor = "#B86500";
 
         this.map = game.add.tilemap('tile_map');
         this.map.addTilesetImage('tile_map', 'tile_sheet');
@@ -326,6 +328,15 @@ var playState = {
         for (var i = 0; i < 3; i++) {
             this.lives.create(175 - (i * 30), 63, 'live');
         }
+    },
+
+    checkLevelPassed: function() {
+
+        if (!this.levelPassed &&
+            this.player.body.x > 4700 &&
+            this.player.body.x < 4760 &&
+            this.player.body.y > 1060 &&
+            this.player.body.y < 1070) { game.state.start("menu"); }
     },
 
     createModals: function() {
