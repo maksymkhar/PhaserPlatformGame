@@ -12,6 +12,7 @@ var playState = {
         game.load.image('enemy_4', 'assets/images/enemyFlying_1.png');
         game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
         game.load.image('blod_particle', 'assets/images/blod_particle.png');
+        game.load.image('live', 'assets/images/live.png');
         game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
 
         game.load.audio('music', ['assets/sounds/music.wav']);
@@ -36,32 +37,13 @@ var playState = {
         this.createModals();
         this.setParticles();
         this.loadEnemies();
-        // Load score and lives texts and counters
-        this.initCounters();
+        this.initScoreCounter();
+        this.initLives();
 
         // Controls
         this.cursors = game.input.keyboard.createCursorKeys();
-
-
-
-
+        
         this.immunityTime = 0;
-
-
-
-        this.livesTest = game.add.group();
-        for (var i = 0; i < 3; i++)
-        {
-
-
-
-            oneLive = this.livesTest.create(30, game.world.height - 550, 'star');
-            oneLive.anchor.setTo(0.5, 0.5);
-            oneLive.angle = 90;
-            oneLive.alpha = 0.4;
-        }
-
-
     },
     update: function() {
 
@@ -140,21 +122,18 @@ var playState = {
     },
     enemyAttack: function() {
 
-        if (this.player.dead) { return; }
-
         this.shakeEffect(this.player);
         this.hurt.play();
 
-        if (this.lives > 0) {
-            this.lives--;
-            this.livesText.text = 'Lives: ' + this.lives;
+        live = this.lives.getFirstAlive();
+
+        if (live) {
+            live.kill();
             this.immunityTime = (new Date()).getTime() + 3000;
             this.player.tint = 0x6efdfd;
-
-            return;
+        } else {
+            this.playerBloodDeath();
         }
-
-        this.playerBloodDeath();
     },
     loadMap: function() {
 
@@ -330,15 +309,23 @@ var playState = {
         if (parseInt(this.enemy6.body.y) < 600 ) { this.enemy6.body.velocity.y = 150; }
     },
 
-    initCounters: function() {
+    initScoreCounter: function() {
 
         this.score = 0;
         this.scoreText = game.add.text(16, 16, 'Score: ' + this.score, { fontSize: '32px', fill: '#fff' });
         this.scoreText.fixedToCamera = true;
+    },
+    initLives: function() {
 
-        this.lives = 3;
-        this.livesText = game.add.text(16, 55, 'Lives: ' + this.lives, { fontSize: '32px', fill: '#fff'});
+        this.livesText = game.add.text(16, 55, 'Lives:', { fontSize: '32px', fill: '#fff'});
         this.livesText.fixedToCamera = true;
+
+        this.lives = game.add.group();
+        this.lives.fixedToCamera = true;
+
+        for (var i = 0; i < 3; i++) {
+            this.lives.create(175 - (i * 30), 63, 'live');
+        }
     },
 
     createModals: function() {
