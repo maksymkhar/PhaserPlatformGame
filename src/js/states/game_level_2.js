@@ -29,6 +29,7 @@ var playStateLevel2 = {
     create: function() {
 
         game.physics.startSystem(Phaser.Physics.ARCADE);
+        game.physics.arcade.TILE_BIAS = 80;
 
         this.loadMap();
         this.loadPlayer();
@@ -165,7 +166,7 @@ var playStateLevel2 = {
         this.player.animations.add('left', [0, 1, 2, 3], 20, true);
         this.player.animations.add('right', [5, 6, 7, 8], 20, true);
 
-        this.player.body.bounce.y = 0;
+        this.player.body.bounce.y = 0.1;
         this.player.body.gravity.y = 1200;
 
         this.player.dead = false;
