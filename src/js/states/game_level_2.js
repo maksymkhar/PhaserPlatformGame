@@ -29,9 +29,10 @@ var playStateLevel2 = {
     create: function() {
 
         game.physics.startSystem(Phaser.Physics.ARCADE);
-        game.physics.arcade.TILE_BIAS = 80;
+        game.physics.arcade.TILE_BIAS = 60;
 
         this.loadMap();
+        this.loadRain();
         this.loadPlayer();
         this.loadStars();
         this.loadSounds();
@@ -335,7 +336,26 @@ var playStateLevel2 = {
             this.lives.create(175 - (i * 30), 63, 'live');
         }
     },
+    loadRain: function() {
 
+        this.rain = game.add.emitter(game.world.centerX, 0, 800);
+
+        this.rain.width = game.world.width;
+        // emitter.angle = 30; // uncomment to set an angle for the rain.
+
+        this.rain.makeParticles('splash_particle');
+
+        this.rain.minParticleScale = 0.1;
+        this.rain.maxParticleScale = 0.5;
+
+        this.rain.setYSpeed(300, 500);
+        this.rain.setXSpeed(-5, 5);
+
+        this.rain.minRotation = 0;
+        this.rain.maxRotation = 0;
+
+        this.rain.start(false, 2400, 5, 0);
+    },
     checkLevelPassed: function() {
 
         if (!this.levelPassed &&
@@ -413,5 +433,6 @@ var playStateLevel2 = {
     },
     getRandomBetween: function (start, end) {
         return Math.floor(Math.random() * end) + start;
-    }
+    },
+
 };

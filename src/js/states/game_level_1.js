@@ -31,7 +31,7 @@ var playStateLevel1 = {
     create: function() {
 
         game.physics.startSystem(Phaser.Physics.ARCADE);
-        game.physics.arcade.TILE_BIAS = 80;
+        game.physics.arcade.TILE_BIAS = 60;
 
         this.loadMap();
         this.loadPlayer();
@@ -44,7 +44,6 @@ var playStateLevel1 = {
         this.initScoreCounter();
         this.setLevelText(1);
         this.initLives();
-
 
         // Default player velocity
         this.rightVelocity = 300;
@@ -138,7 +137,6 @@ var playStateLevel1 = {
 
         this.shakeEffect(this.player, 100);
         this.shout.play();
-        this.player.body.bounce.y = 0.5;
 
         // Increment player size and change player color
         this.player.scale.setTo(1.4, 1.4);
@@ -304,8 +302,6 @@ var playStateLevel1 = {
         this.enemies = game.add.group();
         this.enemies.enableBody = true;
 
-        console.log(game.world.height);
-
         this.enemy1 = this.enemies.create(400, 1060, 'enemy_1');
         this.enemy1.body.gravity.y = 300;
         this.enemy1.body.velocity.x = 40;
@@ -402,8 +398,6 @@ var playStateLevel1 = {
     },
 
     checkLevelPassed: function() {
-
-        console.log("X:"+ this.player.body.x + " Y:" + this.player.body.y );
 
         if (!this.levelPassed &&
             this.player.body.x > 4700 &&
