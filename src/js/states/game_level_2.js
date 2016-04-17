@@ -39,6 +39,7 @@ var playStateLevel2 = {
         this.setParticles();
         //this.loadEnemies();
         this.initScoreCounter();
+        this.setLevelText(2);
         this.initLives();
 
         // Controls
@@ -317,6 +318,10 @@ var playStateLevel2 = {
         this.score = 0;
         this.scoreText = game.add.text(16, 16, 'Score: ' + this.score, { fontSize: '32px', fill: '#fff' });
         this.scoreText.fixedToCamera = true;
+    },
+    setLevelText: function(level) {
+        this.levelText = game.add.text(game.camera.width - 130, 16, "Level: " + level, { fontSize: '32px', fill: '#fff' });
+        this.levelText.fixedToCamera = true;
     },
     initLives: function() {
 

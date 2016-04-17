@@ -13,6 +13,7 @@ var playStateLevel1 = {
         game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
         game.load.image('blod_particle', 'assets/images/blod_particle.png');
         game.load.image('live', 'assets/images/live.png');
+        game.load.image('power', 'assets/images/power.png');
         game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
 
         game.load.audio('music', ['assets/sounds/music.wav']);
@@ -21,6 +22,7 @@ var playStateLevel1 = {
         game.load.audio('game_over', ['assets/sounds/game_over_a.wav']);
         game.load.audio('splash', ['assets/sounds/splash.wav']);
         game.load.audio('hurt', ['assets/sounds/hurt.wav']);
+        game.load.audio('shout', ['assets/sounds/shout.wav']);
 
         game.load.tilemap('tile_map', 'assets/map/tile_map_level_1.json', null, Phaser.Tilemap.TILED_JSON);
         game.load.image('tile_sheet', 'assets/map/tilesheet.png');
@@ -34,12 +36,19 @@ var playStateLevel1 = {
         this.loadMap();
         this.loadPlayer();
         this.loadStars();
+        this.loadPower();
         this.loadSounds();
         this.createModals();
         this.setParticles();
         this.loadEnemies();
         this.initScoreCounter();
+        this.setLevelText(1);
         this.initLives();
+
+
+        // Default player velocity
+        this.rightVelocity = 300;
+        this.leftVelocity = -300;
 
         // Controls
         this.cursors = game.input.keyboard.createCursorKeys();
@@ -52,8 +61,10 @@ var playStateLevel1 = {
         game.physics.arcade.collide(this.stars, this.platformsLayer);
         game.physics.arcade.collide(this.player, this.platformsLayer);
         game.physics.arcade.collide(this.enemies, this.platformsLayer);
+        game.physics.arcade.collide(this.power, this.platformsLayer);
 
         game.physics.arcade.overlap(this.player, this.stars, this.collectStar, null, this);
+        game.physics.arcade.overlap(this.player, this.power, this.collectPower, null, this);
 
         if (this.immunityTime < (new Date()).getTime()) {
             this.player.tint = 0xffffff;
@@ -76,8 +87,8 @@ var playStateLevel1 = {
         if (this.player.dead) { return; }
 
         // Directions
-        if (this.cursors.left.isDown)  { this.directionPlayer(-300, 'left'); } // Move to left
-        else if (this.cursors.right.isDown) { this.directionPlayer(300, 'right'); }  // Move to right
+        if (this.cursors.left.isDown)  { this.directionPlayer(this.leftVelocity, 'left'); } // Move to left
+        else if (this.cursors.right.isDown) { this.directionPlayer(this.rightVelocity, 'right'); }  // Move to right
         else { this.stopPlayer();} // Stop
 
         // Double jump
@@ -123,9 +134,28 @@ var playStateLevel1 = {
         this.score += 10;
         this.scoreText.text = 'Score: ' + this.score;
     },
+    collectPower: function(player, power) {
+
+        this.shakeEffect(this.player, 100);
+        this.shout.play();
+        this.player.body.bounce.y = 0.5;
+
+        // Increment player size and change player color
+        this.player.scale.setTo(1.4, 1.4);
+        this.player.tint = 0xff0000;
+
+        // Set 30 sec player inmunity
+        this.immunityTime = (new Date()).getTime() + 30000;
+
+        // Increase player velocity
+        this.leftVelocity = -700;
+        this.rightVelocity = 700;
+
+        power.kill();
+    },
     enemyAttack: function() {
 
-        this.shakeEffect(this.player);
+        this.shakeEffect(this.player, 20);
         this.hurt.play();
 
         live = this.lives.getFirstAlive();
@@ -192,6 +222,12 @@ var playStateLevel1 = {
         }
 
     },
+    loadPower: function() {
+
+        this.power = game.add.sprite(2100, 80, 'power');
+        game.physics.arcade.enable(this.power)
+        this.power.body.gravity.y = 300;
+    },
     loadSounds: function () {
 
         // Sounds
@@ -200,6 +236,7 @@ var playStateLevel1 = {
         this.gameOver = game.add.audio('game_over', 0.6);
         this.splash = game.add.audio('splash', 1);
         this.hurt = game.add.audio('hurt', 1);
+        this.shout = game.add.audio('shout', 3);
         // Music
         this.music = game.add.audio('music', 0.8);
         this.music.loop = true;
@@ -267,28 +304,45 @@ var playStateLevel1 = {
         this.enemies = game.add.group();
         this.enemies.enableBody = true;
 
-        this.enemy1 = this.enemies.create(400, game.world.height - 220, 'enemy_1');
+        console.log(game.world.height);
+
+        this.enemy1 = this.enemies.create(400, 1060, 'enemy_1');
         this.enemy1.body.gravity.y = 300;
         this.enemy1.body.velocity.x = 40;
 
-        this.enemy2 = this.enemies.create(400, game.world.height - 420, 'enemy_2');
+        this.enemy2 = this.enemies.create(400, 860, 'enemy_2');
         this.enemy2.body.gravity.y = 300;
         this.enemy2.body.velocity.x = -60;
 
-        this.enemy3 = this.enemies.create(810, game.world.height - 580, 'enemy_2');
+        this.enemy3 = this.enemies.create(810, 700, 'enemy_2');
         this.enemy3.body.gravity.y = 300;
         this.enemy3.body.velocity.x = 60;
 
-        this.enemy4 = this.enemies.create(1420, game.world.height - 320, 'enemy_1');
+        this.enemy4 = this.enemies.create(1420, 960, 'enemy_1');
         this.enemy4.body.gravity.y = 300;
         this.enemy4.body.velocity.x = 100;
 
-        this.enemy5 = this.enemies.create(2350, game.world.height - 540, 'enemy_3');
+        this.enemy5 = this.enemies.create(2350, 740, 'enemy_3');
         this.enemy5.body.gravity.y = 300;
         this.enemy5.body.velocity.x = 100;
 
-        this.enemy6 = this.enemies.create(2950, game.world.height - 540, 'enemy_4');
+        this.enemy6 = this.enemies.create(2950, 740, 'enemy_4');
         this.enemy6.body.velocity.y = 100;
+
+        this.enemy7 = this.enemies.create(2150, 680, 'enemy_1');
+        this.enemy7.body.gravity.y = 300;
+        this.enemy7.body.velocity.x = 60;
+
+        this.enemy8 = this.enemies.create(1930, 538, 'enemy_2');
+        this.enemy8.body.gravity.y = 300;
+        this.enemy8.body.velocity.x = 80;
+
+        this.enemy9 = this.enemies.create(1710, 380, 'enemy_3');
+        this.enemy9.body.gravity.y = 300;
+        this.enemy9.body.velocity.x = 80;
+
+        this.enemy10 = this.enemies.create(1650, 30, 'enemy_4');
+        this.enemy10.body.velocity.y = 100;
     },
 
     updateEnemyMovement: function(){
@@ -310,6 +364,18 @@ var playStateLevel1 = {
 
         if (parseInt(this.enemy6.body.y) > 900 ) { this.enemy6.body.velocity.y = -600; }
         if (parseInt(this.enemy6.body.y) < 600 ) { this.enemy6.body.velocity.y = 150; }
+
+        if (parseInt(this.enemy7.body.x) > 2230 ) { this.enemy7.body.velocity.x = -60; }
+        if (parseInt(this.enemy7.body.x) < 2150 ) { this.enemy7.body.velocity.x = 80; }
+
+        if (parseInt(this.enemy8.body.x) > 2010) { this.enemy8.body.velocity.x = -90; }
+        if (parseInt(this.enemy8.body.x) < 1930 ) { this.enemy8.body.velocity.x = 30; }
+
+        if (parseInt(this.enemy9.body.x) > 1785) { this.enemy9.body.velocity.x = -90; }
+        if (parseInt(this.enemy9.body.x) < 1710 ) { this.enemy9.body.velocity.x = this.getRandomBetween(50, 150); }
+
+        if (parseInt(this.enemy10.body.y) > 250 ) { this.enemy10.body.velocity.y = this.getRandomBetween(-50, -600); }
+        if (parseInt(this.enemy10.body.y) < 30 ) { this.enemy10.body.velocity.y = this.getRandomBetween(50, 600); }
     },
 
     initScoreCounter: function() {
@@ -317,6 +383,10 @@ var playStateLevel1 = {
         this.score = 0;
         this.scoreText = game.add.text(16, 16, 'Score: ' + this.score, { fontSize: '32px', fill: '#fff' });
         this.scoreText.fixedToCamera = true;
+    },
+    setLevelText: function(level) {
+        this.levelText = game.add.text(game.camera.width - 130, 16, "Level: " + level, { fontSize: '32px', fill: '#fff' });
+        this.levelText.fixedToCamera = true;
     },
     initLives: function() {
 
@@ -333,11 +403,17 @@ var playStateLevel1 = {
 
     checkLevelPassed: function() {
 
+        console.log("X:"+ this.player.body.x + " Y:" + this.player.body.y );
+
         if (!this.levelPassed &&
             this.player.body.x > 4700 &&
             this.player.body.x < 4760 &&
-            this.player.body.y > 1060 &&
-            this.player.body.y < 1070) { game.state.start("playStateLevel2"); }
+            this.player.body.y > 1050 &&
+            this.player.body.y < 1070)
+        {
+            this.music.stop();
+            game.state.start("playStateLevel2");
+        }
     },
 
     createModals: function() {
@@ -390,9 +466,8 @@ var playStateLevel1 = {
             ]
         });
     },
-    shakeEffect: function(g) {
+    shakeEffect: function(g, time) {
         var move = 5;
-        var time = 20;
 
         game.add.tween(g)
             .to({y:"-"+move}, time).to({y:"+"+move*2}, time*2).to({y:"-"+move}, time)
