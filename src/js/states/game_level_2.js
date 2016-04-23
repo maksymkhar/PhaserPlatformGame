@@ -11,9 +11,10 @@ var playStateLevel2 = {
         game.load.image('enemy_3', 'assets/images/enemySpikey_3.png');
         game.load.image('enemy_4', 'assets/images/enemyFlying_1.png');
         game.load.image('enemy_boss', 'assets/images/enemyBoss.png');
-        game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
         game.load.image('blod_particle', 'assets/images/blod_particle.png');
         game.load.image('live', 'assets/images/live.png');
+        game.load.image('button_red', 'assets/images/buttonRed.png');
+        game.load.image('button_red_pressed', 'assets/images/buttonRed_pressed.png');
         game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
         game.load.spritesheet('explosion', 'assets/images/explode.png', 128, 128);
 
@@ -24,6 +25,7 @@ var playStateLevel2 = {
         game.load.audio('splash', ['assets/sounds/splash.wav']);
         game.load.audio('hurt', ['assets/sounds/hurt.wav']);
         game.load.audio('explosion', ['assets/sounds/explosion.wav']);
+        game.load.audio('count_down', ['assets/sounds/count_down.wav']);
 
         game.load.tilemap('tile_map', 'assets/map/tile_map_level_2.json', null, Phaser.Tilemap.TILED_JSON);
         game.load.image('tile_sheet', 'assets/map/tilesheet.png');
@@ -48,21 +50,78 @@ var playStateLevel2 = {
 
         this.loadBullets();
         this.loadExplosions();
+        this.loadRedButton();
 
         // Controls
         this.cursors = game.input.keyboard.createCursorKeys();
 
         this.immunityTime = 0;
         this.levelPassed = false;
+
+
     },
+
+    loadRedButton: function() {
+
+        this.redButton = game.add.sprite(4710, 1040, 'button_red');
+        game.physics.arcade.enable(this.redButton);
+        this.redButton.body.gravity.y = 3000;
+        this.redButton.body.immovable = true;
+        this.redButton.body.collideWorldBounds = true;
+    },
+
+    redButtonActioned: function() {
+
+        if (this.levelPassed) { return; }
+
+        this.levelMusic.stop();
+        this.countDown.play();
+
+        this.redButton.loadTexture('button_red_pressed', 0);
+        this.redButton.body.setSize(50, 17);
+
+        this.shakeEffect(this.boss, 1000, 50);
+        this.boss.tint = 0x6efdfd;
+
+        var boss = this.boss;
+        var particles = this.blodParticles;
+
+        var winMusic = this.winMusic;
+
+        window.setTimeout(function () {
+            //timer2 = game.time.events.loop(1500, increaseScore, this);
+
+
+            particles.x = boss.x + 10;
+            particles.y = boss.y + 30;
+            particles.start(true, 600, null, 400);
+
+            boss.kill();
+
+                window.setTimeout(function () {
+
+                    game.state.start('gameWin');
+                }, 2000);
+
+
+        }, 15300);
+
+        console.log("AWW YEAA");
+
+        this.levelPassed = true;
+
+    },
+
     update: function() {
 
         game.physics.arcade.collide(this.stars, this.platformsLayer);
         game.physics.arcade.collide(this.player, this.platformsLayer);
         game.physics.arcade.collide(this.enemies, this.platformsLayer);
+        game.physics.arcade.collide(this.redButton, this.platformsLayer);
         game.physics.arcade.overlap(this.player, this.stars, this.collectStar, null, this);
         game.physics.arcade.collide(this.bullets, this.platformsLayer, this.bulletHitPlatform, null, this);
 
+        game.physics.arcade.collide(this.player, this.redButton, this.redButtonActioned, null, this);
 
 
         if (this.immunityTime < (new Date()).getTime()) {
@@ -78,10 +137,10 @@ var playStateLevel2 = {
         }
 
         this.inputs();
-        //this.updateEnemyMovement();
-        this.checkLevelPassed();
+        this.updateEnemyMovement();
+        //this.checkLevelPassed();
 
-        if (game.time.now > this.bulletTime) {
+        if (game.time.now > this.bulletTime && this.boss.alive) {
             this.bossShoot();
         }
     },
@@ -111,7 +170,7 @@ var playStateLevel2 = {
 
     inputs: function() {
 
-        if (this.player.dead) { return; }
+        if (this.levelPassed) { return; }
 
         // Directions
         if (this.cursors.left.isDown)  { this.directionPlayer(-300, 'left'); } // Move to left
@@ -163,7 +222,7 @@ var playStateLevel2 = {
     },
     enemyAttack: function() {
 
-        this.shakeEffect(this.player);
+        this.shakeEffect(this.player, 20, 5);
         this.hurt.play();
 
         live = this.lives.getFirstAlive();
@@ -173,17 +232,16 @@ var playStateLevel2 = {
             this.immunityTime = (new Date()).getTime() + 3000;
             this.player.tint = 0x6efdfd;
         } else {
-            this.playerBloodDeath();
+            this.spriteBloodDeath(this.player);
+            this.playerDeath();
         }
     },
     bulletHitPlatform: function(bullet) {
 
-        console.log("PLATFORM BUM");
         this.playExplosion(bullet);
     },
     bulletHitPlayer: function(player, bullet) {
 
-        console.log("PLAYER BUM");
         this.playExplosion(bullet);
         this.enemyAttack();
     },
@@ -195,8 +253,6 @@ var playStateLevel2 = {
         var explosion = this.explosions.getFirstExists(false);
         explosion.play('explosion', 30, false, true);
         explosion.reset(bullet.body.x, bullet.body.y);
-
-        console.log(this.player.body.x);
 
         if (this.player.body.x > 3000) {
             this.explosion.play();
@@ -265,6 +321,7 @@ var playStateLevel2 = {
         this.splash = game.add.audio('splash', 1);
         this.hurt = game.add.audio('hurt', 1);
         this.explosion = game.add.audio('explosion', 0.8);
+        this.countDown = game.add.audio('count_down', 1);
         // Music
         this.levelMusic = game.add.audio('level_music', 0.5);
         this.levelMusic.loop = true;
@@ -288,6 +345,7 @@ var playStateLevel2 = {
         return isReleased;
     },
     playerDeath: function () {
+        this.player.dead = true;
         this.modal.showModal("game_over_modal");
         this.levelMusic.stop();
         this.gameOver.play();
@@ -317,15 +375,15 @@ var playStateLevel2 = {
         this.playerDeath();
         this.player.dead = true;
     },
-    playerBloodDeath: function() {
+    spriteBloodDeath: function(sprite) {
 
-        this.player.kill();
-        this.blodParticles.x = this.player.x + 10;
-        this.blodParticles.y = this.player.y + 30;
+        sprite.kill();
+
+        this.blodParticles.x = sprite.x + 10;
+        this.blodParticles.y = sprite.y + 30;
         this.blodParticles.start(true, 600, null, 400);
 
-        this.playerDeath();
-        this.player.dead = true;
+
     },
     loadEnemies: function() {
 
@@ -334,51 +392,55 @@ var playStateLevel2 = {
 
         this.boss = this.enemies.create(4045, 1040, 'enemy_boss');
         this.boss.body.gravity.y = 300;
-        return;
 
-        this.enemy1 = this.enemies.create(400, game.world.height - 220, 'enemy_1');
+        this.enemy1 = this.enemies.create(550, 1060, 'enemy_4');
+        this.enemy1.body.velocity.y = 100;
+        this.enemy2 = this.enemies.create(730, 960, 'enemy_4');
+        this.enemy2.body.velocity.y = -100;
+        this.enemy3 = this.enemies.create(920, 860, 'enemy_4');
+        this.enemy3.body.velocity.y = 100;
+        this.enemy4 = this.enemies.create(1110, 760, 'enemy_4');
+        this.enemy4.body.velocity.y = 100;
 
-        this.enemy1.body.velocity.x = 40;
+        this.enemy5 = this.enemies.create(1500, 750, 'enemy_2');
+        this.enemy5.body.gravity.y = 500;
+        this.enemy5.body.velocity.x = -100;
 
-        this.enemy2 = this.enemies.create(400, game.world.height - 420, 'enemy_2');
-        this.enemy2.body.gravity.y = 300;
-        this.enemy2.body.velocity.x = -60;
+        this.enemy6 = this.enemies.create(2280, 1090, 'enemy_3');
+        this.enemy6.body.gravity.y = 500;
+        this.enemy6.body.velocity.x = -100;
 
-        this.enemy3 = this.enemies.create(810, game.world.height - 580, 'enemy_2');
-        this.enemy3.body.gravity.y = 300;
-        this.enemy3.body.velocity.x = 60;
-
-        this.enemy4 = this.enemies.create(1420, game.world.height - 320, 'enemy_1');
-        this.enemy4.body.gravity.y = 300;
-        this.enemy4.body.velocity.x = 100;
-
-        this.enemy5 = this.enemies.create(2350, game.world.height - 540, 'enemy_3');
-        this.enemy5.body.gravity.y = 300;
-        this.enemy5.body.velocity.x = 100;
-
-        this.enemy6 = this.enemies.create(2950, game.world.height - 540, 'enemy_4');
-        this.enemy6.body.velocity.y = 100;
+        this.enemy7 = this.enemies.create(2650, 1100, 'enemy_4');
+        this.enemy7.body.velocity.y = 50;
+        this.enemy8 = this.enemies.create(2750, 1100, 'enemy_4');
+        this.enemy8.body.velocity.y = -50;
     },
 
     updateEnemyMovement: function(){
 
-        if (parseInt(this.enemy1.body.x) > 430 ) { this.enemy1.body.velocity.x = -40; }
-        if (parseInt(this.enemy1.body.x) < 360 ) { this.enemy1.body.velocity.x = 40; }
+        if (parseInt(this.enemy1.body.y) > 1150 ) { this.enemy1.body.velocity.y = -600; }
+        if (parseInt(this.enemy1.body.y) < 900 ) { this.enemy1.body.velocity.y = 150; }
 
-        if (parseInt(this.enemy2.body.x) > 430 ) { this.enemy2.body.velocity.x = -60; }
-        if (parseInt(this.enemy2.body.x) < 360 ) { this.enemy2.body.velocity.x = 60; }
+        if (parseInt(this.enemy2.body.y) > 1000 ) { this.enemy2.body.velocity.y = -100; }
+        if (parseInt(this.enemy2.body.y) < 720 ) { this.enemy2.body.velocity.y = 400; }
 
-        if (parseInt(this.enemy3.body.x) > 1200 ) { this.enemy3.body.velocity.x = -600; }
-        if (parseInt(this.enemy3.body.x) < 810 ) { this.enemy3.body.velocity.x = 60; }
+        if (parseInt(this.enemy3.body.y) > 1000 ) { this.enemy3.body.velocity.y = -300; }
+        if (parseInt(this.enemy3.body.y) < 700 ) { this.enemy3.body.velocity.y = 150; }
 
-        if (parseInt(this.enemy4.body.x) > 1970) { this.enemy4.body.velocity.x = this.getRandomBetween(-50, -800); }
-        if (parseInt(this.enemy4.body.x) < 1420 ) { this.enemy4.body.velocity.x = this.getRandomBetween(50, 800); }
+        if (parseInt(this.enemy4.body.y) > 900 ) { this.enemy4.body.velocity.y = -150; }
+        if (parseInt(this.enemy4.body.y) < 500 ) { this.enemy4.body.velocity.y = 800; }
 
-        if (parseInt(this.enemy5.body.x) > 2830) { this.enemy5.body.velocity.x = this.getRandomBetween(-100, -400); }
-        if (parseInt(this.enemy5.body.x) < 2350 ) { this.enemy5.body.velocity.x = this.getRandomBetween(100, 400); }
+        if (parseInt(this.enemy5.body.x) > 1650 ) { this.enemy5.body.velocity.x = this.getRandomBetween(-50, -800);; }
+        if (parseInt(this.enemy5.body.x) < 1230 ) { this.enemy5.body.velocity.x = this.getRandomBetween(150, 450);; }
 
-        if (parseInt(this.enemy6.body.y) > 900 ) { this.enemy6.body.velocity.y = -600; }
-        if (parseInt(this.enemy6.body.y) < 600 ) { this.enemy6.body.velocity.y = 150; }
+        if (parseInt(this.enemy6.body.x) > 2550 ) { this.enemy6.body.velocity.x = -100; }
+        if (parseInt(this.enemy6.body.x) < 2280 ) { this.enemy6.body.velocity.x = 100; }
+
+        if (parseInt(this.enemy7.body.y) > 1150 ) { this.enemy7.body.velocity.y = -50; }
+        if (parseInt(this.enemy7.body.y) < 1040 ) { this.enemy7.body.velocity.y = 50; }
+
+        if (parseInt(this.enemy8.body.y) > 1150 ) { this.enemy8.body.velocity.y = -50; }
+        if (parseInt(this.enemy8.body.y) < 1040 ) { this.enemy8.body.velocity.y = 50; }
     },
 
     initScoreCounter: function() {
@@ -422,14 +484,6 @@ var playStateLevel2 = {
         this.rain.maxRotation = 0;
 
         this.rain.start(false, 2400, 5, 0);
-    },
-    checkLevelPassed: function() {
-
-        if (!this.levelPassed &&
-            this.player.body.x > 4700 &&
-            this.player.body.x < 4760 &&
-            this.player.body.y > 1060 &&
-            this.player.body.y < 1070) { game.state.start("menu"); }
     },
     loadBullets: function() {
         this.bulletTime = 0;
@@ -505,10 +559,7 @@ var playStateLevel2 = {
             ]
         });
     },
-    shakeEffect: function(g) {
-        var move = 5;
-        var time = 20;
-
+    shakeEffect: function(g, time, move) {
         game.add.tween(g)
             .to({y:"-"+move}, time).to({y:"+"+move*2}, time*2).to({y:"-"+move}, time)
             .to({y:"-"+move}, time).to({y:"+"+move*2}, time*2).to({y:"-"+move}, time)

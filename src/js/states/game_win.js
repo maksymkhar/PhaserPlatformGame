@@ -1,7 +1,7 @@
-var levelPassed = {
+var gameWin = {
 
     preload: function() {
-        game.load.audio('level_passed_music', ['assets/sounds/level_passed_music.wav']);
+        game.load.audio('game_win_music', ['assets/sounds/win_music.wav']);
     },
 
     create: function() {
@@ -9,15 +9,16 @@ var levelPassed = {
         game.stage.backgroundColor = "#000000";
         game.stage.disableVisibilityChange = true;
 
-        this.levelPassedMusic = game.add.audio('level_passed_music', 1);
-        this.levelPassedMusic.play();
+        this.winMusic = game.add.audio('game_win_music', 1);
+        this.winMusic.play();
+
 
         this.setGameTitle();
         this.setGameStartButton();
     },
     setGameTitle: function() {
 
-        this.titleText = game.add.text(game.camera.width / 2, 100, "LEVEL PASSED!", {
+        this.titleText = game.add.text(game.camera.width / 2, 100, "THE END", {
             font: 'bold 60pt Ubuntu',
             fill: '#FDFFB5',
             align: 'center'
@@ -27,7 +28,7 @@ var levelPassed = {
     },
     setGameStartButton: function() {
 
-        this.startText = game.add.text(game.camera.width / 2, 280, "NEXT LEVEL", {
+        this.startText = game.add.text(game.camera.width / 2, 280, "MENU", {
             font: '30pt Ubuntu',
             fill: '#FFFFFF',
             align: 'center'
@@ -36,7 +37,7 @@ var levelPassed = {
         this.startText.anchor.set(0.5);
         this.startText.inputEnabled = true;
         this.startText.events.onInputUp.add(function () {
-            game.state.start('playStateLevel2');
+            game.state.start('menu');
         });
     }
 };

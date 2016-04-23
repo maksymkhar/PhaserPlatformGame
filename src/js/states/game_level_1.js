@@ -10,7 +10,6 @@ var playStateLevel1 = {
         game.load.image('enemy_2', 'assets/images/enemySpikey_2.png');
         game.load.image('enemy_3', 'assets/images/enemySpikey_3.png');
         game.load.image('enemy_4', 'assets/images/enemyFlying_1.png');
-        game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
         game.load.image('blod_particle', 'assets/images/blod_particle.png');
         game.load.image('live', 'assets/images/live.png');
         game.load.image('power', 'assets/images/power.png');
@@ -54,7 +53,6 @@ var playStateLevel1 = {
         this.cursors = game.input.keyboard.createCursorKeys();
         
         this.immunityTime = 0;
-        this.levelPassed = false;
 
         this.powerCollected = false;
     },
@@ -171,6 +169,7 @@ var playStateLevel1 = {
         } else {
             this.spriteBloodDeath(this.player);
             this.playerDeath();
+
         }
     },
     playerAttack: function(player, enemy) {
@@ -416,8 +415,7 @@ var playStateLevel1 = {
 
     checkLevelPassed: function() {
 
-        if (!this.levelPassed &&
-            this.player.body.x > 4700 &&
+        if (this.player.body.x > 4700 &&
             this.player.body.x < 4760 &&
             this.player.body.y > 1050 &&
             this.player.body.y < 1070)
