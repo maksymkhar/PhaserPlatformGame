@@ -10,10 +10,12 @@ var playStateLevel2 = {
         game.load.image('enemy_2', 'assets/images/enemySpikey_2.png');
         game.load.image('enemy_3', 'assets/images/enemySpikey_3.png');
         game.load.image('enemy_4', 'assets/images/enemyFlying_1.png');
+        game.load.image('enemy_boss', 'assets/images/enemyBoss.png.png');
         game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
         game.load.image('blod_particle', 'assets/images/blod_particle.png');
         game.load.image('live', 'assets/images/live.png');
         game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
+        game.load.spritesheet('explosion', 'assets/images/explode.png', 128, 128);
 
         game.load.audio('music', ['assets/sounds/music.wav']);
         game.load.audio('jump', ['assets/sounds/jump.wav']);
@@ -21,6 +23,7 @@ var playStateLevel2 = {
         game.load.audio('game_over', ['assets/sounds/game_over_a.wav']);
         game.load.audio('splash', ['assets/sounds/splash.wav']);
         game.load.audio('hurt', ['assets/sounds/hurt.wav']);
+        game.load.audio('explosion', ['assets/sounds/explosion.wav']);
 
         game.load.tilemap('tile_map', 'assets/map/tile_map_level_2.json', null, Phaser.Tilemap.TILED_JSON);
         game.load.image('tile_sheet', 'assets/map/tilesheet.png');
@@ -38,10 +41,13 @@ var playStateLevel2 = {
         this.loadSounds();
         this.createModals();
         this.setParticles();
-        //this.loadEnemies();
+        this.loadEnemies();
         this.initScoreCounter();
         this.setLevelText(2);
         this.initLives();
+
+        this.loadBullets();
+        this.loadExplosions();
 
         // Controls
         this.cursors = game.input.keyboard.createCursorKeys();
@@ -54,12 +60,15 @@ var playStateLevel2 = {
         game.physics.arcade.collide(this.stars, this.platformsLayer);
         game.physics.arcade.collide(this.player, this.platformsLayer);
         game.physics.arcade.collide(this.enemies, this.platformsLayer);
-
         game.physics.arcade.overlap(this.player, this.stars, this.collectStar, null, this);
+        game.physics.arcade.collide(this.bullets, this.platformsLayer, this.bulletHitPlatform, null, this);
+
+
 
         if (this.immunityTime < (new Date()).getTime()) {
             this.player.tint = 0xffffff;
             game.physics.arcade.overlap(this.player, this.enemies, this.enemyAttack, null, this);
+            game.physics.arcade.overlap(this.player, this.bullets, this.bulletHitPlayer, null, this);
         }
 
         this.player.body.velocity.x = 0;
@@ -71,6 +80,33 @@ var playStateLevel2 = {
         this.inputs();
         //this.updateEnemyMovement();
         this.checkLevelPassed();
+
+        if (game.time.now > this.bulletTime) {
+            this.bossShoot();
+        }
+    },
+
+    bossShoot: function() {
+
+        // Get bullet
+        this.bullet = this.bullets.getFirstExists(false);
+
+        if (this.bullet)
+        {
+            //  And fire it
+            this.bullet.reset(this.boss.x, this.boss.y);
+
+            // Random direction and velocity
+            var x, y;
+            x = Math.floor(Math.random() * 1601) -800;
+            y = Math.floor(Math.random() * 801) -800;
+
+            this.bullet.body.velocity.y = y;
+            this.bullet.body.velocity.x = x;
+
+            // Time delay for new bullet shoot
+            this.bulletTime = game.time.now + 200;
+        }
     },
 
     inputs: function() {
@@ -140,6 +176,32 @@ var playStateLevel2 = {
             this.playerBloodDeath();
         }
     },
+    bulletHitPlatform: function(bullet) {
+
+        console.log("PLATFORM BUM");
+        this.playExplosion(bullet);
+    },
+    bulletHitPlayer: function(player, bullet) {
+
+        console.log("PLAYER BUM");
+        this.playExplosion(bullet);
+        this.enemyAttack();
+    },
+
+    playExplosion: function(bullet) {
+
+        bullet.kill();
+
+        var explosion = this.explosions.getFirstExists(false);
+        explosion.play('explosion', 30, false, true);
+        explosion.reset(bullet.body.x, bullet.body.y);
+
+        console.log(this.player.body.x);
+
+        if (this.player.body.x > 3000) {
+            this.explosion.play();
+        }
+    },
     loadMap: function() {
 
         game.stage.backgroundColor = "#B86500";
@@ -202,6 +264,7 @@ var playStateLevel2 = {
         this.gameOver = game.add.audio('game_over', 0.6);
         this.splash = game.add.audio('splash', 1);
         this.hurt = game.add.audio('hurt', 1);
+        this.explosion = game.add.audio('explosion', 1);
         // Music
         this.music = game.add.audio('music', 0.8);
         this.music.loop = true;
@@ -269,8 +332,12 @@ var playStateLevel2 = {
         this.enemies = game.add.group();
         this.enemies.enableBody = true;
 
+        this.boss = this.enemies.create(4045, 1040, 'enemy_boss');
+        this.boss.body.gravity.y = 300;
+        return;
+
         this.enemy1 = this.enemies.create(400, game.world.height - 220, 'enemy_1');
-        this.enemy1.body.gravity.y = 300;
+
         this.enemy1.body.velocity.x = 40;
 
         this.enemy2 = this.enemies.create(400, game.world.height - 420, 'enemy_2');
@@ -364,7 +431,30 @@ var playStateLevel2 = {
             this.player.body.y > 1060 &&
             this.player.body.y < 1070) { game.state.start("menu"); }
     },
+    loadBullets: function() {
+        this.bulletTime = 0;
 
+        this.bullets = game.add.group();
+        this.bullets.enableBody = true;
+        this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+        this.bullets.createMultiple(50, 'enemy_boss');
+        this.bullets.setAll('scale.x', 0.5);
+        this.bullets.setAll('scale.y', 0.5);
+        this.bullets.setAll('outOfBoundsKill', true);
+        this.bullets.setAll('checkWorldBounds', true);
+    },
+
+    loadExplosions: function() {
+        this.explosions = game.add.group();
+        this.explosions.createMultiple(50, 'explosion');
+        this.explosions.forEach(this.setupExplosionAnimation, this);
+    },
+
+    setupExplosionAnimation: function(explosion) {
+        explosion.anchor.x = 0.5;
+        explosion.anchor.y = 0.5;
+        explosion.animations.add('explosion');
+    },
     createModals: function() {
 
         this.modal = new gameModal(game);

@@ -54,6 +54,8 @@ var playStateLevel1 = {
         
         this.immunityTime = 0;
         this.levelPassed = false;
+
+        this.powerCollected = false;
     },
     update: function() {
 
@@ -65,9 +67,13 @@ var playStateLevel1 = {
         game.physics.arcade.overlap(this.player, this.stars, this.collectStar, null, this);
         game.physics.arcade.overlap(this.player, this.power, this.collectPower, null, this);
 
-        if (this.immunityTime < (new Date()).getTime()) {
+        if (this.immunityTime < (new Date()).getTime() && !this.powerCollected) {
             this.player.tint = 0xffffff;
             game.physics.arcade.overlap(this.player, this.enemies, this.enemyAttack, null, this);
+        }
+
+        if (this.powerCollected) {
+            game.physics.arcade.overlap(this.player, this.enemies, this.playerAttack, null, this);
         }
 
         this.player.body.velocity.x = 0;
@@ -135,15 +141,14 @@ var playStateLevel1 = {
     },
     collectPower: function(player, power) {
 
+        this.powerCollected = true;
+
         this.shakeEffect(this.player, 100);
         this.shout.play();
 
         // Increment player size and change player color
         this.player.scale.setTo(1.4, 1.4);
         this.player.tint = 0xff0000;
-
-        // Set 30 sec player inmunity
-        this.immunityTime = (new Date()).getTime() + 30000;
 
         // Increase player velocity
         this.leftVelocity = -700;
@@ -163,8 +168,17 @@ var playStateLevel1 = {
             this.immunityTime = (new Date()).getTime() + 3000;
             this.player.tint = 0x6efdfd;
         } else {
-            this.playerBloodDeath();
+            this.spriteBloodDeath(this.player);
+            this.playerDeath();
+
         }
+    },
+    playerAttack: function(player, enemy) {
+
+        this.spriteBloodDeath(enemy);
+
+        this.hurt.play();
+        enemy.kill();
     },
     loadMap: function() {
 
@@ -258,6 +272,8 @@ var playStateLevel1 = {
         return isReleased;
     },
     playerDeath: function () {
+
+        this.player.dead = true;
         this.modal.showModal("game_over_modal");
         this.music.stop();
         this.gameOver.play();
@@ -285,17 +301,13 @@ var playStateLevel1 = {
         this.splash.play();
 
         this.playerDeath();
-        this.player.dead = true;
     },
-    playerBloodDeath: function() {
+    spriteBloodDeath: function(sprite) {
 
-        this.player.kill();
-        this.blodParticles.x = this.player.x + 10;
-        this.blodParticles.y = this.player.y + 30;
+        sprite.kill();
+        this.blodParticles.x = sprite.x + 10;
+        this.blodParticles.y = sprite.y + 30;
         this.blodParticles.start(true, 600, null, 400);
-
-        this.playerDeath();
-        this.player.dead = true;
     },
     loadEnemies: function() {
 

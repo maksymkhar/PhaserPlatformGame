@@ -2,6 +2,7 @@
 var game;
 
 
+//game = new Phaser.Game(5000, 1500, Phaser.AUTO, 'Game');
 game = new Phaser.Game(900, 500, Phaser.AUTO, 'Game');
 
 // First parameter is how our state will be called.
