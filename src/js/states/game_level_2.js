@@ -57,8 +57,6 @@ var playStateLevel2 = {
 
         this.immunityTime = 0;
         this.levelPassed = false;
-
-
     },
 
     loadRedButton: function() {
@@ -68,48 +66,6 @@ var playStateLevel2 = {
         this.redButton.body.gravity.y = 3000;
         this.redButton.body.immovable = true;
         this.redButton.body.collideWorldBounds = true;
-    },
-
-    redButtonActioned: function() {
-
-        if (this.levelPassed) { return; }
-
-        this.levelMusic.stop();
-        this.countDown.play();
-
-        this.redButton.loadTexture('button_red_pressed', 0);
-        this.redButton.body.setSize(50, 17);
-
-        this.shakeEffect(this.boss, 1000, 50);
-        this.boss.tint = 0x6efdfd;
-
-        var boss = this.boss;
-        var particles = this.blodParticles;
-
-        var winMusic = this.winMusic;
-
-        window.setTimeout(function () {
-            //timer2 = game.time.events.loop(1500, increaseScore, this);
-
-
-            particles.x = boss.x + 10;
-            particles.y = boss.y + 30;
-            particles.start(true, 600, null, 400);
-
-            boss.kill();
-
-                window.setTimeout(function () {
-
-                    game.state.start('gameWin');
-                }, 2000);
-
-
-        }, 15300);
-
-        console.log("AWW YEAA");
-
-        this.levelPassed = true;
-
     },
 
     update: function() {
@@ -194,7 +150,6 @@ var playStateLevel2 = {
         }
     },
 
-    // Example function!
     jumpPlayer: function(velocity) {
         this.player.body.velocity.y = velocity;
         this.jumpSound.play();
@@ -382,8 +337,6 @@ var playStateLevel2 = {
         this.blodParticles.x = sprite.x + 10;
         this.blodParticles.y = sprite.y + 30;
         this.blodParticles.start(true, 600, null, 400);
-
-
     },
     loadEnemies: function() {
 
@@ -441,6 +394,39 @@ var playStateLevel2 = {
 
         if (parseInt(this.enemy8.body.y) > 1150 ) { this.enemy8.body.velocity.y = -50; }
         if (parseInt(this.enemy8.body.y) < 1040 ) { this.enemy8.body.velocity.y = 50; }
+    },
+
+    redButtonActioned: function() {
+
+        if (this.levelPassed) { return; }
+
+        this.levelMusic.stop();
+        this.countDown.play();
+
+        this.redButton.loadTexture('button_red_pressed', 0);
+        this.redButton.body.setSize(50, 17);
+
+        this.shakeEffect(this.boss, 1000, 5);
+        this.boss.tint = 0x6efdfd;
+
+        var boss = this.boss;
+        var particles = this.blodParticles;
+
+        window.setTimeout(function () {
+
+            particles.x = boss.x + 10;
+            particles.y = boss.y + 30;
+            particles.start(true, 600, null, 400);
+
+            boss.kill();
+
+            window.setTimeout(function () {
+                game.state.start('gameWin');
+            }, 2000);
+
+        }, 15300);
+
+        this.levelPassed = true;
     },
 
     initScoreCounter: function() {

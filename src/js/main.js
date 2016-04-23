@@ -13,4 +13,4 @@ game.state.add('levelPassed', levelPassed);
 game.state.add('gameWin', gameWin);
 game.state.add('playStateLevel1', playStateLevel1);
 game.state.add('playStateLevel2', playStateLevel2);
-game.state.start('playStateLevel2');
+game.state.start('menu');

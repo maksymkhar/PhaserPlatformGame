@@ -355,6 +355,22 @@ var playStateLevel1 = {
 
         this.enemy10 = this.enemies.create(1650, 30, 'enemy_4');
         this.enemy10.body.velocity.y = 100;
+
+        this.enemy11 = this.enemies.create(3090, 770, 'enemy_1');
+        this.enemy11.body.gravity.y = 300;
+        this.enemy11.body.velocity.x = 100;
+
+        this.enemy12 = this.enemies.create(3440, 630, 'enemy_3');
+        this.enemy12.body.gravity.y = 300;
+        this.enemy12.body.velocity.x = 100;
+
+        this.enemy13 = this.enemies.create(3630, 760, 'enemy_3');
+        this.enemy13.body.gravity.y = 300;
+        this.enemy13.body.velocity.x = 100;
+
+        this.enemy14 = this.enemies.create(3820, 890, 'enemy_3');
+        this.enemy14.body.gravity.y = 300;
+        this.enemy14.body.velocity.x = 100;
     },
 
     updateEnemyMovement: function(){
@@ -388,6 +404,20 @@ var playStateLevel1 = {
 
         if (parseInt(this.enemy10.body.y) > 250 ) { this.enemy10.body.velocity.y = this.getRandomBetween(-50, -600); }
         if (parseInt(this.enemy10.body.y) < 30 ) { this.enemy10.body.velocity.y = this.getRandomBetween(50, 600); }
+
+        if (parseInt(this.enemy11.body.x) > 3310) { this.enemy11.body.velocity.x = this.getRandomBetween(-50, -300); }
+        if (parseInt(this.enemy11.body.x) < 3090 ) { this.enemy11.body.velocity.x = this.getRandomBetween(50, 300); }
+
+        if (parseInt(this.enemy12.body.x) > 3510 ) { this.enemy12.body.velocity.x = -40; }
+        if (parseInt(this.enemy12.body.x) < 3440 ) { this.enemy12.body.velocity.x = 60; }
+
+        if (parseInt(this.enemy13.body.x) > 3700 ) { this.enemy13.body.velocity.x = -70; }
+        if (parseInt(this.enemy13.body.x) < 3630 ) { this.enemy13.body.velocity.x = 30; }
+
+        if (parseInt(this.enemy14.body.x) > 3890 ) { this.enemy14.body.velocity.x = -80; }
+        if (parseInt(this.enemy14.body.x) < 3820 ) { this.enemy14.body.velocity.x = 20; }
+
+
     },
 
     initScoreCounter: function() {
