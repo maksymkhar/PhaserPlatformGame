@@ -16,7 +16,8 @@ var playStateLevel1 = {
         game.load.image('power', 'assets/images/power.png');
         game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
 
-        game.load.audio('music', ['assets/sounds/music.wav']);
+        game.load.audio('level_music', ['assets/sounds/level_1_music.wav']);
+        game.load.audio('power_music', ['assets/sounds/power_music.wav']);
         game.load.audio('jump', ['assets/sounds/jump.wav']);
         game.load.audio('coin', ['assets/sounds/coin.wav']);
         game.load.audio('game_over', ['assets/sounds/game_over_a.wav']);
@@ -89,7 +90,7 @@ var playStateLevel1 = {
 
     inputs: function() {
 
-        if (this.player.dead) { return; }
+        if (this.blockInputs) { return; }
 
         // Directions
         if (this.cursors.left.isDown)  { this.directionPlayer(this.leftVelocity, 'left'); } // Move to left
@@ -112,8 +113,6 @@ var playStateLevel1 = {
             this.jumping = false;
         }
     },
-
-    // Example function!
     jumpPlayer: function(velocity) {
         this.player.body.velocity.y = velocity;
         this.jumpSound.play();
@@ -145,6 +144,8 @@ var playStateLevel1 = {
 
         this.shakeEffect(this.player, 100);
         this.shout.play();
+        this.levelMusic.stop();
+        this.powerMusic.play();
 
         // Increment player size and change player color
         this.player.scale.setTo(1.4, 1.4);
@@ -170,7 +171,6 @@ var playStateLevel1 = {
         } else {
             this.spriteBloodDeath(this.player);
             this.playerDeath();
-
         }
     },
     playerAttack: function(player, enemy) {
@@ -211,7 +211,7 @@ var playStateLevel1 = {
         this.player.body.bounce.y = 0.1;
         this.player.body.gravity.y = 1200;
 
-        this.player.dead = false;
+        this.blockInputs = false;
     },
     loadStars: function () {
 
@@ -250,9 +250,12 @@ var playStateLevel1 = {
         this.hurt = game.add.audio('hurt', 1);
         this.shout = game.add.audio('shout', 3);
         // Music
-        this.music = game.add.audio('music', 0.8);
-        this.music.loop = true;
-        this.music.play();
+        this.levelMusic = game.add.audio('level_music', 0.8);
+        this.levelMusic.loop = true;
+        this.levelMusic.play();
+
+        this.powerMusic = game.add.audio('power_music', 1);
+        this.powerMusic.loop = true;
     },
     upInputIsActive: function(duration) {
 
@@ -273,9 +276,11 @@ var playStateLevel1 = {
     },
     playerDeath: function () {
 
-        this.player.dead = true;
+        this.blockInputs = true;
+
         this.modal.showModal("game_over_modal");
-        this.music.stop();
+        this.levelMusic.stop();
+        this.powerMusic.stop();
         this.gameOver.play();
     },
     setParticles: function() {
@@ -417,8 +422,9 @@ var playStateLevel1 = {
             this.player.body.y > 1050 &&
             this.player.body.y < 1070)
         {
-            this.music.stop();
-            game.state.start("playStateLevel2");
+            this.levelMusic.stop();
+            this.powerMusic.stop();
+            game.state.start('levelPassed');
         }
     },
 

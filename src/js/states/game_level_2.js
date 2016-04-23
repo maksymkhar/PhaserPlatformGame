@@ -10,14 +10,14 @@ var playStateLevel2 = {
         game.load.image('enemy_2', 'assets/images/enemySpikey_2.png');
         game.load.image('enemy_3', 'assets/images/enemySpikey_3.png');
         game.load.image('enemy_4', 'assets/images/enemyFlying_1.png');
-        game.load.image('enemy_boss', 'assets/images/enemyBoss.png.png');
+        game.load.image('enemy_boss', 'assets/images/enemyBoss.png');
         game.load.image('splash_particle', 'assets/images/splash_particle.jpg');
         game.load.image('blod_particle', 'assets/images/blod_particle.png');
         game.load.image('live', 'assets/images/live.png');
         game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
         game.load.spritesheet('explosion', 'assets/images/explode.png', 128, 128);
 
-        game.load.audio('music', ['assets/sounds/music.wav']);
+        game.load.audio('level_music', ['assets/sounds/level_2_music.wav']);
         game.load.audio('jump', ['assets/sounds/jump.wav']);
         game.load.audio('coin', ['assets/sounds/coin.wav']);
         game.load.audio('game_over', ['assets/sounds/game_over_a.wav']);
@@ -264,11 +264,11 @@ var playStateLevel2 = {
         this.gameOver = game.add.audio('game_over', 0.6);
         this.splash = game.add.audio('splash', 1);
         this.hurt = game.add.audio('hurt', 1);
-        this.explosion = game.add.audio('explosion', 1);
+        this.explosion = game.add.audio('explosion', 0.8);
         // Music
-        this.music = game.add.audio('music', 0.8);
-        this.music.loop = true;
-        this.music.play();
+        this.levelMusic = game.add.audio('level_music', 0.5);
+        this.levelMusic.loop = true;
+        this.levelMusic.play();
     },
     upInputIsActive: function(duration) {
 
@@ -289,7 +289,7 @@ var playStateLevel2 = {
     },
     playerDeath: function () {
         this.modal.showModal("game_over_modal");
-        this.music.stop();
+        this.levelMusic.stop();
         this.gameOver.play();
     },
     setParticles: function() {
